@@ -16,7 +16,7 @@ Usage
 =====
 lib/testTx will build a proof from txHash using ethProof.js and connecting to infura, and then verify it using ethVerify
 
-lib/testR will build a receipt proof from txHash using ethProof.js and connecting to infura, so far it works on some reciepts, trying to figure out hhhwhy. The reciept verification is not working yet
+lib/testR will build a receipt proof from txHash using ethProof.js and connecting to infura, and then verify it using ethVerify
 
 
 plan
