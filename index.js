@@ -1,4 +1,4 @@
-EthProof  = require('./lib/ethProof')
-EthVerify = require('./lib/ethVerify')
+EP  = require('./lib/ethProof')
+EV  = require('./lib/ethVerify')
 
-module.exports = {EthProof, EthVerify}
+module.exports = {EP, EV}
