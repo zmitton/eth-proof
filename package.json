@@ -4,7 +4,7 @@
   "description": "merkel patricia trie test",
   "main": "index.js",
   "dependencies": {
-    "merkle-patricia-tree": "https://github.com/zmitton/merkle-patricia-tree/tarball/master",
+    "merkle-patricia-tree": "https://github.com/zmitton/merkle-patricia-tree/tarball/develop",
     "ethereumjs-block": "^1.5.1",
     "keccak": "^1.2.0",
     "rlp": "^2.0.0",
