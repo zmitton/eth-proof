@@ -1,5 +1,5 @@
 {
-  "name": "merkle-patricia-proof",
+  "name": "eth-proof",
   "version": "0.0.1",
   "description": "merkel patricia trie test",
   "main": "index.js",

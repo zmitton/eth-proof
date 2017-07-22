@@ -1,3 +1,10 @@
+//to do before publish
+//un globalize vars
+//examples
+//change the name of all this from merkle-patricia-proof to eth-proof
+//merge ethVerify into merkle-patricia-tree lib; remove from here
+
+
 WIP Nothing works yet. "calm down, you're being very un-dude"
 
 messy brain-dump below
