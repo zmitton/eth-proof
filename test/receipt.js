@@ -1,5 +1,6 @@
 var Web3 = require('web3')
-var EP  = require('./../lib/ethProof')
+// var EP  = require('./../lib/ethProof')
+var EP  = require('./../index')
 var EV = require('./../lib/ethVerify')
 var eP = new EP(new Web3.providers.HttpProvider("https://gmainnet.infura.io"))
 
