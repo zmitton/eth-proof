@@ -42,13 +42,13 @@ EthProof.prototype.getAccountProof = function(address){
   self = this
   return self.getOrInitStateTrie().then(()=>{
     return new Promise((accept, reject) => {
-      var path = new Buffer(sha3(new Buffer(address,'hex')),'hex')
+      var path = Buffer.from(sha3(Buffer.from(address,'hex')),'hex')
 
       var stateTrie = new Trie(self.db, Buffer.from(self.block.stateRoot.slice(2),'hex'))
       stateTrie.findPath(path, (e,accountNode,remainder,stack) => {
         if(e || !accountNode){ return reject(e || "accountNode not found")}
           var prf = {
-            blockHash: new Buffer(self.blockHash,'hex'),
+            blockHash: Buffer.from(self.blockHash,'hex'),
             header:    getRawHeader(self.block),
             parentNodes:     rawStack(stack),
             address:   Buffer.from(address,'hex'),
@@ -83,14 +83,28 @@ EthProof.prototype.getStorageRootProof = function(address){
     })
   })
 }
-EthProof.prototype.getStorageProof = function(address, storageIndex){
-  // TO DO
+
+// not yet tested for multi-dimentional mappings
+EthProof.prototype.getStorageProof = function(address, _storageIndex /*...map1,map2...*/){
   self = this
+  var mappings = Array.prototype.slice.call(arguments, 2)
+  var bufMappings = []
   return this.getStorageRootProof(address).then((accountPrf)=>{
     return new Promise((accept, reject) => {
 
-      var storagePath = new Buffer(sha3(new Buffer(leftPad(storageIndex),'hex')),'hex')
       var storageTrie = new Trie(self.db, accountPrf.value)
+      var storageIndex = Buffer.from(leftPad(_storageIndex),'hex')
+      var pathBuilder = storageIndex
+      if(mappings.length > 0){
+        for(var i = 0 ; i < mappings.length ; i++){
+          bufMappings.push(Buffer.from(leftPad(mappings[i]),'hex'))
+          pathBuilder = Buffer.concat([bufMappings[i], pathBuilder])
+        }
+        pathBuilder = Buffer.from(sha3(pathBuilder),'hex')
+      }
+
+      var storagePath = Buffer.from(sha3(pathBuilder),'hex')
+
       storageTrie.findPath(storagePath, (e,storageNode,remainder,stack) => {
         if(e || !storageNode){ return reject(e || "storageNode not found")}
           var prf = {
@@ -102,6 +116,7 @@ EthProof.prototype.getStorageProof = function(address, storageIndex){
             account: accountPrf.value,
             value: rlp.decode(storageNode.value),
             storageIndex: strToBuf(storageIndex),
+            mappings: bufMappings
           }
         accept(prf)
       })
@@ -150,7 +165,7 @@ EthProof.prototype.getTransactionProof = function(txHash){
           }, function(e,r){
             txTrie.findPath(rlp.encode(transaction.transactionIndex), function(e,rawTxNode,remainder,stack){
               var prf = {
-                blockHash: new Buffer(transaction.blockHash.slice(2),'hex'),
+                blockHash: Buffer.from(transaction.blockHash.slice(2),'hex'),
                 header:    getRawHeader(block),
                 parentNodes:     rawStack(stack),
                 path:      rlp.encode(transaction.transactionIndex),
@@ -180,7 +195,7 @@ EthProof.prototype.getReceiptProof = function(txHash){
         }, function(e,r){
           receiptsTrie.findPath(rlp.encode(receipt.transactionIndex), function(e,rawReceiptNode,remainder,stack){
             var prf = {
-              blockHash: new Buffer(receipt.blockHash.slice(2),'hex'),
+              blockHash: Buffer.from(receipt.blockHash.slice(2),'hex'),
               header:    getRawHeader(block),
               parentNodes:     rawStack(stack),
               path:      rlp.encode(receipt.transactionIndex),
@@ -202,7 +217,7 @@ EthProof.prototype.getReceiptProof = function(txHash){
 // EthProof = () => {}
 EthProof.header = (header, blockHash) => {
   try{
-    return new Buffer(sha3(rlp.encode(header)),'hex').equals(blockHash);
+    return Buffer.from(sha3(rlp.encode(header)),'hex').equals(blockHash);
   }catch(e){ console.log(e) }
   return false
 }
@@ -252,13 +267,22 @@ EthProof.storageAtIndex = (storageIndex, storageValue, storageParentNodes, addre
   }catch(e){ console.log(e) }
   return false
 }
-// EthProof.storageMapping = (storageIndex, storageValue, storageParentNodes, address, accountParentNodes, header, blockHash) => {
-//   try{
-//     var storagePath = Buffer.from(sha3(Buffer.from(leftPad(storageIndex.toString('hex')),'hex')),'hex')
-//     return EthProof.storage(storagePath, storageValue, storageParentNodes, address, accountParentNodes, header, blockHash)
-//   }catch(e){ console.log(e) }
-//   return false
-// }
+
+// untested for multi dimensional mappings
+EthProof.storageMapping = (storageIndex, _mappings, storageValue, storageParentNodes, address, accountParentNodes, header, blockHash) => {
+  try{
+    var pathBuilder = Buffer.from(leftPad(storageIndex.toString('hex')),'hex')
+    var mappings = []
+    for(var i = 0 ; i < _mappings.length ; i++){
+      pathBuilder = Buffer.concat([Buffer.from(leftPad(_mappings[i].toString('hex')),'hex'), pathBuilder])
+    }
+    pathBuilder = Buffer.from(sha3(pathBuilder),'hex')
+
+    var storagePath = Buffer.from(sha3(pathBuilder),'hex')
+    return EthProof.storage(storagePath, storageValue, storageParentNodes, address, accountParentNodes, header, blockHash)
+  }catch(e){ console.log(e) }
+  return false
+}
 
 EthProof.storage = (storagePath, storageValue, storageParentNodes, address, accountParentNodes, header, blockHash) => {
   try{
@@ -312,8 +336,8 @@ EthProof.trieValue = (path, value, parentNodes, root) => {
 
     for (var i = 0 ; i < len ; i++) {
       currentNode = parentNodes[i];
-      if(!nodeKey.equals( new Buffer(sha3(rlp.encode(currentNode)),'hex'))){
-        console.log("nodeKey != sha3(rlp.encode(currentNode)): ", nodeKey, new Buffer(sha3(rlp.encode(currentNode)),'hex'))
+      if(!nodeKey.equals( Buffer.from(sha3(rlp.encode(currentNode)),'hex'))){
+        console.log("nodeKey != sha3(rlp.encode(currentNode)): ", nodeKey, Buffer.from(sha3(rlp.encode(currentNode)),'hex'))
         return false;
       }
       if(pathPtr > path.length){
@@ -430,9 +454,9 @@ var squanchTx = (tx) => {
 }
 var strToBuf = (input)=>{ 
   if(input.slice(0,2) == "0x"){
-    return new Buffer(byteable(input.slice(2)), "hex")
+    return Buffer.from(byteable(input.slice(2)), "hex")
   }else{
-    return new Buffer(byteable(input), "hex") 
+    return Buffer.from(byteable(input), "hex") 
   }
 }
 
@@ -440,7 +464,7 @@ var leftPad = (str) => {
   return ("0000000000000000000000000000000000000000000000000000000000000000"+str).substring(str.length)
 }
 
-var numToBuf = (input)=>{ return new Buffer(byteable(input.toString(16)), "hex") }
+var numToBuf = (input)=>{ return Buffer.from(byteable(input.toString(16)), "hex") }
 var byteable = (input)=>{ return input.length % 2 == 0 ? input : "0" + input }
 
 module.exports = EthProof

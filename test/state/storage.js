@@ -24,4 +24,22 @@ describe('storage proof', function () {
       done()
     }).catch((e) => {console.log(e)})
   });
+
+
+///to do : make sure this stuff is right. Im not buyin it yet
+  it('can request a contract proof from local chaindata', function (done) {
+    eP.getStorageProof('9cc9bf39a84998089050a90087e597c26758685d', '1','1f4e7db8514ec4e99467a8d2ee3a63094a904e7a').then((result)=>{
+      // console.log(result.value)
+      EP.storageMapping(
+        result.storageIndex,
+        result.mappings,
+        result.value, 
+        result.storageParentNodes, 
+        result.address, 
+        result.accountParentNodes, 
+        result.header, 
+      result.blockHash).should.be.true()
+      done()
+    }).catch((e) => {console.log(e)})
+  });
 });
