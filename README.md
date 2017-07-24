@@ -40,7 +40,7 @@ eP.getTransactionProof(txHash).then((result)=>{
   // I can now verify the proof against a blockhash I trust.
   var myTrustedBlockHash = Buffer.from('f82990de9b368d810ce4b858c45717737245aa965771565f8a41df4c75acc171','hex')
   var verified = EP.transaction(result.path, result.value, result.stack, result.header, myTrustedBlockHash)
-  console.log(verified)
+  console.log(verified) // true
 }).catch((e)=>{console.log(e)})
 ```
 
@@ -83,7 +83,7 @@ Proposed RPC spec:
 still thinkin about this
 
 ```
-curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionProof","params":["0xc55e2b90168af6972193c1f86fa4d7d7b31a29c156665d15b9cd48618b5177ef"],"id":1}'
+curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionProof","params":["0xc55e2b90168af6972193c1f86fa4d7d7b31a29c156665d15b9cd48618b5177ef", "0xbeab0aa2411b7ab17f30a99d3cb9c6ef2fc5426d6ad6fd9e2a26a6aed1d1055b"],"id":1}'
 
 // Result
 {
@@ -91,7 +91,6 @@ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionProof","params
 "jsonrpc":"2.0",
 "result": {
     "path":"0x80"
-    "blockHash":"0xbeab0aa2411b7ab17f30a99d3cb9c6ef2fc5426d6ad6fd9e2a26a6aed1d1055b"
     "transaction":{
       "hash":"0xc6ef2fc5426d6ad6fd9e2a26abeab0aa2411b7ab17f30a99d3cb96aed1d1055b",
       "nonce":"0x",
@@ -105,14 +104,17 @@ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionProof","params
       "gasPrice":"0x09184e72a000",
       "input":"0x603880600c6000396000f300603880600c6000396000f3603880600c6000396000f360",
     },
-    "parentNodes": [ //order of parent nodes does not matter
-      <rlpBlockheader>,
-      <firsNodeInTxTrie>,
-      <rlpParentNodeA2345698.......>,
-      <rlpParentNodeB2345098.......>,
-      <rlpParentNodeC2334594...>,
-      <rlpParentNodeD2239486...>,
-    ]
+    "transactionTrieNodes": [
+      [<TxRootNode>],
+      [<ParentNodeA>],
+      [<ParentNodeB>],
+      [<ParentNodeC>],
+      ...[<valueNodeWithTheTx>]
+    ],
+    "blockHeader": [parentHash,ommersHash,beneficiary,stateRoot,transactionsRoot,receiptsRoot,logsBloom,,difficulty,number,gasLimit,gasUsed,timestamp,extraData,mixHash,nonce],
+    "blockHash":"0xbeab0aa2411b7ab17f30a99d3cb9c6ef2fc5426d6ad6fd9e2a26a6aed1d1055b"
   }
 }
 ```
+
+We could instead use the rlp of the blockheader and/or rlp of transactionTrieNodes response, I dont have a preference.

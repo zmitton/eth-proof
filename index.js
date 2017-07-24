@@ -33,7 +33,7 @@ EthProof.prototype.getOrInitStateTrie = function(){
         accept()
       })
     }else{
-      reject("must init EthProof with a blockhash to do that")
+      reject("must init EthProof with a blockHash to do that")
     }
   })
 }
@@ -42,20 +42,20 @@ EthProof.prototype.getAccountProof = function(address){
   self = this
   return self.getOrInitStateTrie().then(()=>{
     return new Promise((accept, reject) => {
-        var path = new Buffer(sha3(new Buffer(address,'hex')),'hex')
+      var path = new Buffer(sha3(new Buffer(address,'hex')),'hex')
 
-        var stateTrie = new Trie(self.db, Buffer.from(self.block.stateRoot.slice(2),'hex'))
-        stateTrie.findPath(path, (e,accountNode,remainder,stack) => {
-          if(e || !accountNode){ return reject(e || "accountNode not found")}
-            var prf = {
-              blockhash: new Buffer(self.blockHash,'hex'),
-              header:    getRawHeader(self.block),
-              stack:     rawStack(stack),
-              address:   Buffer.from(address,'hex'),
-              value:     rlp.decode(accountNode.value)
-            }
-          accept(prf)
-        })
+      var stateTrie = new Trie(self.db, Buffer.from(self.block.stateRoot.slice(2),'hex'))
+      stateTrie.findPath(path, (e,accountNode,remainder,stack) => {
+        if(e || !accountNode){ return reject(e || "accountNode not found")}
+          var prf = {
+            blockHash: new Buffer(self.blockHash,'hex'),
+            header:    getRawHeader(self.block),
+            parentNodes:     rawStack(stack),
+            address:   Buffer.from(address,'hex'),
+            value:     rlp.decode(accountNode.value)
+          }
+        accept(prf)
+      })
     })
   })
 }
@@ -85,16 +85,30 @@ EthProof.prototype.getStorageRootProof = function(address){
 }
 EthProof.prototype.getStorageProof = function(address, storageIndex){
   // TO DO
-  // self = this
-  // return this.getStorageRootProof(address).then((prf)=>{
-  //   return new Promise((accept, reject) => {
-  //     self.web3.eth.getCode(address,'latest', function(e,code){
-  //       if(e || !code){reject(e || 'no code found')}
-  //       prf.value = Buffer.from(code.slice(2),'hex')
-  //       accept(prf)
-  //     })
-  //   })
-  // })
+  self = this
+  return this.getStorageRootProof(address).then((accountPrf)=>{
+    return new Promise((accept, reject) => {
+
+      var storagePath = new Buffer(sha3(new Buffer(leftPad(storageIndex),'hex')),'hex')
+      var storageTrie = new Trie(self.db, accountPrf.value)
+      storageTrie.findPath(storagePath, (e,storageNode,remainder,stack) => {
+        if(e || !storageNode){ return reject(e || "storageNode not found")}
+          var prf = {
+            header: accountPrf.header,
+            blockHash: accountPrf.blockHash,
+            accountParentNodes: accountPrf.parentNodes,
+            storageParentNodes: rawStack(stack),
+            address: strToBuf(address),
+            account: accountPrf.value,
+            value: rlp.decode(storageNode.value),
+            storageIndex: strToBuf(storageIndex),
+          }
+        accept(prf)
+      })
+
+
+    })
+  })
 }
 EthProof.prototype.getCodeHashProof = function(address){
   return this.getAccountProof(address).then((prf)=>{
@@ -117,12 +131,6 @@ EthProof.prototype.getCodeProof = function(address){
   })
 }
 
-
-
-var leftPad = (str) => {
-  return ("0000000000000000000000000000000000000000000000000000000000000000"+str).substring(str.length)
-}
-
 EthProof.prototype.getTransactionProof = function(txHash){
   self = this;
   return new Promise((accept, reject) => {
@@ -142,9 +150,9 @@ EthProof.prototype.getTransactionProof = function(txHash){
           }, function(e,r){
             txTrie.findPath(rlp.encode(transaction.transactionIndex), function(e,rawTxNode,remainder,stack){
               var prf = {
-                blockhash: new Buffer(transaction.blockHash.slice(2),'hex'),
+                blockHash: new Buffer(transaction.blockHash.slice(2),'hex'),
                 header:    getRawHeader(block),
-                stack:     rawStack(stack),
+                parentNodes:     rawStack(stack),
                 path:      rlp.encode(transaction.transactionIndex),
                 value:     rlp.decode(rawTxNode.value)
               }
@@ -172,9 +180,9 @@ EthProof.prototype.getReceiptProof = function(txHash){
         }, function(e,r){
           receiptsTrie.findPath(rlp.encode(receipt.transactionIndex), function(e,rawReceiptNode,remainder,stack){
             var prf = {
-              blockhash: new Buffer(receipt.blockHash.slice(2),'hex'),
+              blockHash: new Buffer(receipt.blockHash.slice(2),'hex'),
               header:    getRawHeader(block),
-              stack:     rawStack(stack),
+              parentNodes:     rawStack(stack),
               path:      rlp.encode(receipt.transactionIndex),
               value:     rlp.decode(rawReceiptNode.value)
             }
@@ -188,16 +196,8 @@ EthProof.prototype.getReceiptProof = function(txHash){
 
 
 
-
-
-
-
-
-
-
-
 // public methods all prove commitment to a blockHash
-// all args must be Buffers
+// all args currently expect Buffers
 //to do: they should all only take one proofNodes array merge header into parentNodes 
 // EthProof = () => {}
 EthProof.header = (header, blockHash) => {
@@ -208,7 +208,7 @@ EthProof.header = (header, blockHash) => {
 }
 EthProof.headerElement = (index, value, header, blockHash) => {
   try{
-    if(header[index].equals(value)){
+    if(value.equals(header[index])){
       return Buffer.from(sha3(rlp.encode(header)),'hex').equals(blockHash);
     }
   }catch(e){ console.log(e) }
@@ -245,30 +245,28 @@ EthProof._accountElement = (accountIndex, address, targetValue, parentNodes, hea
   }catch(e){ console.log(e) }
   return false
 }
-
-//to do: this should probably only take one ParentNodes array arg. merge the 2
 EthProof.storageAtIndex = (storageIndex, storageValue, storageParentNodes, address, accountParentNodes, header, blockHash) => {
   try{
-    var storagePath = Buffer.from(sha3(rlp.encode(storageIndex)))
+    var storagePath = Buffer.from(sha3(Buffer.from(leftPad(storageIndex.toString('hex')),'hex')),'hex')
     return EthProof.storage(storagePath, storageValue, storageParentNodes, address, accountParentNodes, header, blockHash)
   }catch(e){ console.log(e) }
   return false
 }
 // EthProof.storageMapping = (storageIndex, storageValue, storageParentNodes, address, accountParentNodes, header, blockHash) => {
 //   try{
-//     var storagePath = Buffer.from(sha3(rlp.encode(storageIndex)))
+//     var storagePath = Buffer.from(sha3(Buffer.from(leftPad(storageIndex.toString('hex')),'hex')),'hex')
 //     return EthProof.storage(storagePath, storageValue, storageParentNodes, address, accountParentNodes, header, blockHash)
 //   }catch(e){ console.log(e) }
 //   return false
 // }
+
 EthProof.storage = (storagePath, storageValue, storageParentNodes, address, accountParentNodes, header, blockHash) => {
   try{
     var storageTrieRoot = EthProof._valueFrom(accountParentNodes)[2]
     if(EthProof.storageRoot(address, storageTrieRoot, accountParentNodes, header, blockHash)){
-      // if(EthProof.account(address, account, accountParentNodes, header, blockHash)){
-      //account is already also proven during `storageRoot`
-      return EthProof.trieValue(rlp.encode(storagePath), storageValue, storageParentNodes, storageTrieRoot)
-      // }
+      //account is already proven during `storageRoot`
+
+      return EthProof.trieValue(storagePath, storageValue, storageParentNodes, storageTrieRoot)
     }
   }catch(e){ console.log(e) }
   return false
@@ -279,7 +277,7 @@ EthProof.log = () => {/* to do */}
 EthProof.logBloom = () => {/* probably dont care. Arent these just for fast lookups? */}
 
 
-// account can be a contract or 
+// account can be a contract 
 EthProof.account = (address, account, parentNodes, header, blockHash) => {
   var sha3OfAddress = Buffer.from(sha3(address),'hex')
   return EthProof._valueInTrieIndex(3, sha3OfAddress, account, parentNodes, header, blockHash)
@@ -430,7 +428,18 @@ var squanchTx = (tx) => {
   tx.value = '0x' + tx.value.toString(16)
   return tx;
 }
-var strToBuf = (input)=>{ return new Buffer(byteable(input.slice(2)), "hex") }
+var strToBuf = (input)=>{ 
+  if(input.slice(0,2) == "0x"){
+    return new Buffer(byteable(input.slice(2)), "hex")
+  }else{
+    return new Buffer(byteable(input), "hex") 
+  }
+}
+
+var leftPad = (str) => {
+  return ("0000000000000000000000000000000000000000000000000000000000000000"+str).substring(str.length)
+}
+
 var numToBuf = (input)=>{ return new Buffer(byteable(input.toString(16)), "hex") }
 var byteable = (input)=>{ return input.length % 2 == 0 ? input : "0" + input }
 
