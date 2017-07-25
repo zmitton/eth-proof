@@ -1,15 +1,23 @@
-const Web3 = require('web3');
+var Web3 = require('web3');
+var EP  = require('./../../index')
 
-const EP  = require('./../../index')
-const chainDataPath = '/Users/zacharymitton/Library/Ethereum/geth/chaindata'
-const eP = new EP(
-  new Web3.providers.HttpProvider("https://gmainnet.infura.io"),
-  'a61b780b1c2f6a79d052e4b58234dc126fd7fdc9338705983d6068965ba8384b',
-  chainDataPath
-)
 
-console.log("USING CHAIN DATA PATH:", chainDataPath, "YOU CAN NOT JUST USE MY PATH!!!")
+
+
 describe('account state proof/verify full account [nonce, balance, storageRoot, codeHash]', function () {
+  var eP
+  before(function(){
+    var chainDataPath = '/Users/zacharymitton/Library/Ethereum/geth/chaindata'
+    console.log("USING CHAIN DATA PATH:", chainDataPath, "YOU CAN NOT JUST USE MY PATH!!!")
+    eP = new EP(
+      new Web3.providers.HttpProvider("https://gmainnet.infura.io"),
+      'a61b780b1c2f6a79d052e4b58234dc126fd7fdc9338705983d6068965ba8384b',
+      chainDataPath
+    )
+  })
+
+  after(function(){ eP.db.close() })
+
   // some accounts are contracts
   it('can request a contract proof from local chaindata', function (done) {
     eP.getAccountProof('9cc9bf39a84998089050a90087e597c26758685d').then((result)=>{
@@ -56,9 +64,8 @@ describe('account state proof/verify full account [nonce, balance, storageRoot, 
       done()
     })
   });
-});
 
-describe('account nonce proof/verify', function () {
+
   // some accounts are contracts
   it('can request a contract proof from local chaindata', function (done) {
     eP.getNonceProof('9cc9bf39a84998089050a90087e597c26758685d').then((result)=>{
@@ -105,9 +112,8 @@ describe('account nonce proof/verify', function () {
       done()
     })
   });
-});
 
-describe('account state: ETH balance proofs', function () {
+
   // some accounts are contracts
   it('can request a contract proof from local chaindata', function (done) {
     eP.getBalanceProof('9cc9bf39a84998089050a90087e597c26758685d').then((result)=>{
@@ -154,9 +160,8 @@ describe('account state: ETH balance proofs', function () {
       done()
     })
   });
-});
 
-describe('account state: storageRoot proofs', function () {
+
   // some accounts are contracts
   it('can request a contract proof from local chaindata', function (done) {
     eP.getStorageRootProof('9cc9bf39a84998089050a90087e597c26758685d').then((result)=>{
@@ -203,9 +208,8 @@ describe('account state: storageRoot proofs', function () {
       done()
     })
   });
-});
 
-describe('account state: codeHash proofs', function () {
+
   // some accounts are contracts
   it('can request a contract proof from local chaindata', function (done) {
     eP.getCodeHashProof('9cc9bf39a84998089050a90087e597c26758685d').then((result)=>{
@@ -252,9 +256,8 @@ describe('account state: codeHash proofs', function () {
       done()
     })
   });
-});
 
-describe('account state,codeRoot, code proofs', function () {
+
   // some accounts are contracts
   it('can request a contract proof from local chaindata', function (done) {
     eP.getCodeProof('9cc9bf39a84998089050a90087e597c26758685d').then((result)=>{
@@ -302,5 +305,4 @@ describe('account state,codeRoot, code proofs', function () {
     })
   });
 });
-
 

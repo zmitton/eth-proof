@@ -209,6 +209,17 @@ EthProof.prototype.getReceiptProof = function(txHash){
   })
 }
 
+// EthProof.prototype.getLogProof = function(/*wait how the hell do logs work*/){
+//   self = this
+//   var mappings = Array.prototype.slice.call(arguments, 2)
+//   var bufMappings = []
+//   return this.getReceiptProof(txHash).then((accountPrf)=>{
+//     return new Promise((accept, reject) => {
+//       accept(prf)
+//     })
+//   })
+// })
+
 
 
 // public methods all prove commitment to a blockHash
@@ -244,7 +255,7 @@ EthProof.codeHash = (address, codeHash, parentNodes, header, blockHash) => {
 }
 EthProof.code = (address, code, parentNodes, header, blockHash) => {
   try{
-    var account = EthProof._valueFrom(parentNodes)
+    var account = valueFrom(parentNodes)
     if(Buffer.from(sha3(code),'hex').equals(account[3])){
       return EthProof.codeHash(address, account[3], parentNodes, header, blockHash)
     }
@@ -253,7 +264,7 @@ EthProof.code = (address, code, parentNodes, header, blockHash) => {
 }
 EthProof._accountElement = (accountIndex, address, targetValue, parentNodes, header, blockHash) => {
   try{
-    var account = EthProof._valueFrom(parentNodes) // decoded last last
+    var account = valueFrom(parentNodes) // decoded last last
     if(EthProof.account(address, account, parentNodes, header, blockHash)){
       return account[accountIndex].equals(targetValue)
     }
@@ -286,7 +297,7 @@ EthProof.storageMapping = (storageIndex, _mappings, storageValue, storageParentN
 
 EthProof.storage = (storagePath, storageValue, storageParentNodes, address, accountParentNodes, header, blockHash) => {
   try{
-    var storageTrieRoot = EthProof._valueFrom(accountParentNodes)[2]
+    var storageTrieRoot = valueFrom(accountParentNodes)[2]
     if(EthProof.storageRoot(address, storageTrieRoot, accountParentNodes, header, blockHash)){
       //account is already proven during `storageRoot`
 
@@ -361,7 +372,7 @@ EthProof.trieValue = (path, value, parentNodes, root) => {
           break;
         case 2:
           // console.log(currentNode[0].toString('hex'), path, pathPtr)
-          pathPtr += EthProof._nibblesToTraverse(currentNode[0].toString('hex'), path, pathPtr)
+          pathPtr += nibblesToTraverse(currentNode[0].toString('hex'), path, pathPtr)
           if(pathPtr == path.length){//leaf node
             if(currentNode[1].equals(rlp.encode(value))){
               return true
@@ -382,7 +393,7 @@ EthProof.trieValue = (path, value, parentNodes, root) => {
   return false
 }
 
-EthProof._nibblesToTraverse = (encodedPartialPath, path, pathPtr) => { 
+var nibblesToTraverse = (encodedPartialPath, path, pathPtr) => { 
   if(encodedPartialPath[0] == 0 || encodedPartialPath[0] == 2){
     var partialPath = encodedPartialPath.slice(2)
   }else{
@@ -395,13 +406,10 @@ EthProof._nibblesToTraverse = (encodedPartialPath, path, pathPtr) => {
     throw new Error("path was wrong")
   }
 }
-EthProof._valueFrom = (parentNodes) => {
-  // last last item decoded
+var valueFrom = (parentNodes) => { // last last item decoded
   return rlp.decode(parentNodes[parentNodes.length - 1][parentNodes[parentNodes.length - 1].length - 1])
 }
-// EthProof._rootFrom = (parentNodes) => {
-//   return Buffer.from(sha3(rlp.encode(parentNodes[0])),'hex')
-// }
+
 
 
 

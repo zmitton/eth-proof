@@ -1,6 +1,6 @@
-const Web3 = require('web3')
-const EP   = require('./../../index')
-const eP   = new EP(new Web3.providers.HttpProvider("https://gmainnet.infura.io"))
+var Web3 = require('web3')
+var EP   = require('./../../index')
+var eP   = new EP(new Web3.providers.HttpProvider("https://gmainnet.infura.io"))
 
 
 describe('getReceiptProof', function () {
