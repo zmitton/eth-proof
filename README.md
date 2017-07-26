@@ -31,7 +31,7 @@ var eP = new EP(new Web3.providers.HttpProvider("https://gmainnet.infura.io"))
 * eP.getReceiptProof
 * eP.getLogProof //todo
 
-To access the rest of the functionality you need to run a full node and init the object with all 3 things (`web3Provider`, `blochHash`, `dbPath`). 
+To access the rest of the functionality you need to have a full node and init the object with all 3 things (`web3Provider`, `blochHash`, `dbPath`). 
 
 ```javascript
 var chainDataPath = '/Users/zacharymitton/Library/Ethereum/geth/chaindata'
