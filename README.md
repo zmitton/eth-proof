@@ -1,41 +1,39 @@
-###General Ethereum Merkle Patricia Trie (tree) Proofs
+# Eth Proof
+## General Ethereum Merkle Patricia Trie (tree) Proofs
 
-
-###Use
+### Use
 ---
-
-`npm install eth-proof` temp solution until published -->`"eth-proof": "https://github.com/zmitton/eth-proof/tarball/master"`
-
+```
+npm install eth-proof
+```
 ```javascript
 const Web3 = require('web3')
 const EP  = require('eth-proof')
 ```
 
-###API
+### API
 ------
 
 This library has 2 main functions:
 ----------------------------------
 
-1. "building" of a proof 
-Requests data, so these functions require a web3Provider. They are async using promises.
+* Building of a proof - Requests data, so these functions require a web3Provider. They are async using promises.
 
-2. "verifying" a given proof is correct
-Can/should be done locally/client-side. These functions are synchronous and require no connections.
+* Verifying a given proof is correct - Can/should be done locally/client-side. These functions are synchronous and require no connections.
 
 You can initiallize an EP instance with a web3provider to get only the limited API for proof building (async promises, instance functions):
 
-```
+```javascript
 var eP = new EP(new Web3.providers.HttpProvider("https://gmainnet.infura.io"))
 ```
 
-eP.getTransactionProof(txHash).then((prf)=>{})
-eP.getReceiptProof
-eP.getLogProof //todo
+* eP.getTransactionProof(txHash).then((prf)=>{})
+* eP.getReceiptProof
+* eP.getLogProof //todo
 
 To access the rest of the functionality you need to run a full node and init the object with all 3 things (`web3Provider`, `blochHash`, `dbPath`). 
 
-```
+```javascript
 var chainDataPath = '/Users/zacharymitton/Library/Ethereum/geth/chaindata'
 var eP = new EP(
   new Web3.providers.HttpProvider("https://gmainnet.infura.io"),
@@ -43,37 +41,38 @@ var eP = new EP(
   chainDataPath //can be omitted if you only need TXs and receipts
 )
 ```
-extended API for proof building:
 
-eP.getAccountProof
-eP.getNonceProof
-eP.getBalanceProof
-eP.getStorageRootProof
-eP.getStorageProof (includes mappings!)
-eP.getCodeHashProof
-eP.getCodeProof
+Extended API for proof building:
 
-This is because the intermediate state data needed for proofs is not available through Ethereum RPC (neither is tx, receipts, or logs but we can hack it using multiple PRC calls).
+* eP.getAccountProof
+* eP.getNonceProof
+* eP.getBalanceProof
+* eP.getStorageRootProof
+* eP.getStorageProof (includes mappings!)
+* eP.getCodeHashProof
+* eP.getCodeProof
+
+This is because the intermediate state trie data needed for proofs is not available through Ethereum RPC (neither is tx, receipts, or logs but we can hack it using multiple PRC calls). So you need to provide the levelDB path and then it can traverse the trie. The path shown is what works on my macbook's geth data Please let me know if you find out the paths for different systems. Geth cant be running (something about opening the DB twice at the same time).
 
 You can *check* that a proof is valid using the class-level functions. They check proofs against a specified blockHash. Establishing trust of a blockHash is a separate issue. It relies on trust of a chain, which should ultimately rely on a set of heuristics involving expected total work at the current moment in time.
 
 API for proof *verifying* (for client-side, synchronous, class-level):
 
-EP.header
-EP.headerElement
-EP.accountNonce
-EP.balance
-EP.storageRoot
-EP.codeHash
-EP.code
-EP.storageAtIndex
-EP.storageMapping
-EP.storage
-EP.log
-EP.account
-EP.transaction
-EP.receipt
-EP.trieValue
+* EP.header
+* EP.headerElement
+* EP.accountNonce
+* EP.balance
+* EP.storageRoot
+* EP.codeHash
+* EP.code
+* EP.storageAtIndex
+* EP.storageMapping
+* EP.storage
+* EP.log
+* EP.account
+* EP.transaction
+* EP.receipt
+* EP.trieValue
 
 Please see the tests for sample uses. run only the file you need with `mocha test/state/storage.js` for example. Its all data currently on mainnet.
 
@@ -89,7 +88,7 @@ eP.getTransactionProof(txHash).then((result)=>{
 }).catch((e)=>{console.log(e)})
 ```
 
-###Testing
+### Testing
 ----------
 The tests `npm run test` will build tx and receipt proofs by connect to infura, and then verify them.
 
@@ -110,7 +109,6 @@ Reasons
 -------
 main API should prove against a blockHash
 
-
 The EV public API checks proofs against a specified blockHash. Establishing trust of a blockHash is a separate issue. It relies on trustof a chain, which should ultimately rely on a set of heuristics involving expected total work at the current moment in time
 
 proving absence:
@@ -123,6 +121,7 @@ long term goal is a light client that can validate an entire state transition.it
 
 The client can initialize its `state-tree` object using the ParentNodes from the proof, generating an in-memory level-db as `key = sha3(value)` for element in parentNode array. It puts them in this mini state trie, and inits the root. then it can run its EVM implementation directly on this trie as usual. at the end it checks its new root to verify legitimacy. If the evm tries to traverse any data that doesnt exist (even null data must have proof of null), it should return as invalid.
 
+We are also finding it useful to relay ethereum to itself. It sounds weird, but you can later make proofs about any historical information and information not usually available to the EVM can be made available as needed from the relay contract.
 
 Proposed RPC spec (WIP)
 -----------------
@@ -163,4 +162,4 @@ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionProof","params
 }
 ```
 
-We could instead use the rlp of the blockheader and/or rlp of transactionTrieNodes response, I dont have a preference.
+We could instead use the rlp of the blockheader and/or rlp of transactionTrieNodes response, I dont have a preference yet. I just seems the RPC response are usually made to be human somewhat readable.
