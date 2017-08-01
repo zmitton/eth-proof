@@ -83,7 +83,7 @@ eP.getTransactionProof(txHash).then((result)=>{
 
   // I can now verify the proof against a blockhash I trust.
   var myTrustedBlockHash = Buffer.from('f82990de9b368d810ce4b858c45717737245aa965771565f8a41df4c75acc171','hex')
-  var verified = EP.transaction(result.path, result.value, result.stack, result.header, myTrustedBlockHash)
+  var verified = EP.transaction(result.path, result.value, result.parentNodes, result.header, myTrustedBlockHash)
   console.log(verified) // true
 }).catch((e)=>{console.log(e)})
 ```
@@ -94,7 +94,7 @@ The tests `npm run test` will build tx and receipt proofs by connect to infura, 
 
 These tests hit Infura mainnet really hard. please be considerate.
 
-If you run a full node you can modify `chainPath` in `test/state` and run `npm run extended-test`.
+If you have a geth full node you can modify `chainDataPath`a and `RecentBlockHash` in `test/state/'... files, and run `npm run extended-test`.
 
 
 
@@ -105,19 +105,13 @@ For txproof building and recieptProof building access to leveldb is not required
 For state (accounts, storage, all that stuff) you cant get the proof from rpc calls, because the state trie is a huge trie (>20gb) and there are no RPC calls to get the proof data needed (the data is a bunch of "parent nodes"). Its very easy to get directly from the levelDB however, and theirfore, we will be making an EIP which can hopefully add RPC support for returning it. We can name the methods after standard RPC methods with the word `proof` concatenated on them, and have them take 1 extra `blockHash` param. In the meantime, x-relay can run our own custom ethereum servers which support these proof requests.
 
 
-Reasons
--------
-main API should prove against a blockHash
-
-The EV public API checks proofs against a specified blockHash. Establishing trust of a blockHash is a separate issue. It relies on trustof a chain, which should ultimately rely on a set of heuristics involving expected total work at the current moment in time
-
-proving absence:
-its possible but must construct the proof with a few amendments to EV.value.
-
 Goals
 -----
 
 long term goal is a light client that can validate an entire state transition.it would need proofs for all data touched during the state transition (tx).
+
+proving absence:
+its possible but must construct the proof with a few amendments to EV.value.
 
 The client can initialize its `state-tree` object using the ParentNodes from the proof, generating an in-memory level-db as `key = sha3(value)` for element in parentNode array. It puts them in this mini state trie, and inits the root. then it can run its EVM implementation directly on this trie as usual. at the end it checks its new root to verify legitimacy. If the evm tries to traverse any data that doesnt exist (even null data must have proof of null), it should return as invalid.
 
@@ -149,8 +143,8 @@ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionProof","params
       "gasPrice":"0x09184e72a000",
       "input":"0x603880600c6000396000f300603880600c6000396000f3603880600c6000396000f360",
     },
-    "transactionTrieNodes": [
-      [<TxRootNode>],
+    "parentNodes": [
+      [<TxsRootNode>],
       [<ParentNodeA>],
       [<ParentNodeB>],
       [<ParentNodeC>],

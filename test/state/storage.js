@@ -5,10 +5,11 @@ describe('storage proof', function () {
   var eP
   before(function(){
     var chainDataPath = '/Users/zacharymitton/Library/Ethereum/geth/chaindata'
+    var recentBlockHash = 'c7b427ed2e0fcc24474437e676625186abefb4328d0807c2c36edb78c2d54082'
     console.log("USING CHAIN DATA PATH:", chainDataPath, "YOU CAN NOT JUST USE MY PATH!!!")
     eP = new EP(
       new Web3.providers.HttpProvider("https://gmainnet.infura.io"),
-      'a61b780b1c2f6a79d052e4b58234dc126fd7fdc9338705983d6068965ba8384b',
+      recentBlockHash,
       chainDataPath
     )
   })
