@@ -24,6 +24,9 @@
     "test": "node_modules/.bin/mocha test/default",
     "extended-test": "node_modules/.bin/mocha test"
   },
+  "bin": {
+    "ethproof": "./cli.js"
+  },
   "author": "zac mitton",
   "license": "ISC"
 }
