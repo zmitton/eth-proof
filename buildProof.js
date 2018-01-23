@@ -188,7 +188,7 @@ BuildProof.prototype.getReceiptProof = function(txHash){
         var receiptsTrie = new Trie();
         async.map(block.transactions,function(siblingTxHash, cb2){
           self.web3.eth.getTransactionReceipt(siblingTxHash, function(e,siblingReceipt){
-            putReceipt(siblingReceipt, receiptsTrie, cb2)
+            putReceipt(siblingReceipt, receiptsTrie, block.number, cb2)
           })
         }, function(e,r){
           receiptsTrie.findPath(rlp.encode(receipt.transactionIndex), function(e,rawReceiptNode,remainder,stack){
@@ -229,13 +229,20 @@ BuildProof.prototype.getLogProof = function(txHash, logIndex){
 }
 
 
-var putReceipt = (siblingReceipt, receiptsTrie, cb2) => {//need siblings to rebuild trie
+var putReceipt = (siblingReceipt, receiptsTrie, blockNum, cb2) => {//need siblings to rebuild trie
   var path = siblingReceipt.transactionIndex
-  var postTransactionState = strToBuf(siblingReceipt.root)
+
   var cummulativeGas = numToBuf(siblingReceipt.cumulativeGasUsed)
   var bloomFilter = strToBuf(siblingReceipt.logsBloom)
   var setOfLogs = encodeLogs(siblingReceipt.logs)
-  var rawReceipt = rlp.encode([postTransactionState,cummulativeGas,bloomFilter,setOfLogs])
+  
+  if(blockNum < 4370000){
+    var postTransactionState = strToBuf(siblingReceipt.root)
+    var rawReceipt = rlp.encode([postTransactionState, cummulativeGas,bloomFilter,setOfLogs])
+  }else{
+    var status = strToBuf(siblingReceipt.status)
+    var rawReceipt = rlp.encode([status,cummulativeGas,bloomFilter,setOfLogs])
+  }
 
   receiptsTrie.put(rlp.encode(path), rawReceipt, function (error) {
     error != null ? cb2(error, null) : cb2(error, true)
