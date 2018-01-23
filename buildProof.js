@@ -236,12 +236,12 @@ var putReceipt = (siblingReceipt, receiptsTrie, blockNum, cb2) => {//need siblin
   var bloomFilter = strToBuf(siblingReceipt.logsBloom)
   var setOfLogs = encodeLogs(siblingReceipt.logs)
   
-  if(blockNum < 4370000){
-    var postTransactionState = strToBuf(siblingReceipt.root)
-    var rawReceipt = rlp.encode([postTransactionState, cummulativeGas,bloomFilter,setOfLogs])
-  }else{
+  if(siblingReceipt.status !== undefined && siblingReceipt.status != null){
     var status = strToBuf(siblingReceipt.status)
     var rawReceipt = rlp.encode([status,cummulativeGas,bloomFilter,setOfLogs])
+  }else{
+    var postTransactionState = strToBuf(siblingReceipt.root)
+    var rawReceipt = rlp.encode([postTransactionState, cummulativeGas,bloomFilter,setOfLogs])
   }
 
   receiptsTrie.put(rlp.encode(path), rawReceipt, function (error) {

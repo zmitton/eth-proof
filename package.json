@@ -1,6 +1,6 @@
 {
   "name": "eth-proof",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "proving things in the Ethereum patricia tries (trees)",
   "main": "index.js",
   "dependencies": {
