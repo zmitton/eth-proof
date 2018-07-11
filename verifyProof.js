@@ -140,6 +140,7 @@ VerifyProof.trieValue = (path, value, parentNodes, root) => {
 
     for (var i = 0 ; i < len ; i++) {
       currentNode = parentNodes[i];
+      console.log(rlp.encode(currentNode));
       if(!nodeKey.equals( Buffer.from(sha3(rlp.encode(currentNode)),'hex'))){
         console.log("nodeKey != sha3(rlp.encode(currentNode)): ", nodeKey, Buffer.from(sha3(rlp.encode(currentNode)),'hex'))
         return false;
