@@ -203,6 +203,26 @@ BuildProof.prototype.getTransactionProof = function(txHash){
   })
 }
 
+BuildProof.prototype.getReceiptTrieRoot = function(txHash){
+  self = this;
+  return new Promise ((accept, reject) => {
+    self.web3.eth.getTransactionReceipt(txHash, function(e,receipt){
+      if(e || !receipt){ return reject("receipt not found")}
+      self.web3.eth.getBlock(receipt.blockHash, false, function(e,block){
+        if(e || !block){ return reject("block not found")}
+        var receiptsTrie = new Trie();
+        async.map(block.transactions,function(siblingTxHash, cb2){
+          self.web3.eth.getTransactionReceipt(siblingTxHash, function(e,siblingReceipt){
+            putReceipt(siblingReceipt, receiptsTrie, block.number, cb2)
+          })
+        }, function(e,r){
+          return accept(receiptsTrie._root)
+        });
+      })
+    })
+  })
+}
+
 BuildProof.prototype.getReceiptProof = function(txHash){
   self = this;
   return new Promise ((accept, reject) => {
