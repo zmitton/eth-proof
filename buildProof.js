@@ -282,11 +282,9 @@ var putReceipt = (siblingReceipt, receiptsTrie, blockNum, cb2) => {//need siblin
   var setOfLogs = encodeLogs(siblingReceipt.logs)
   
   if(siblingReceipt.status !== undefined && siblingReceipt.status != null){
-    console.log("\n\n\nOOOOOOOOOOOOOOOOOOOOOOOO RECEIPT HAS STATUS\n\n\n")
     var status = strToBuf(siblingReceipt.status)
     var rawReceipt = rlp.encode([status,cummulativeGas,bloomFilter,setOfLogs])
   }else{
-    console.log("\n\n\nXXXXXXXXXXXXXXXXXXXXXX NO RECEIPT STATUS\n\n\n")
     var postTransactionState = strToBuf(siblingReceipt.root)
     var rawReceipt = rlp.encode([postTransactionState, cummulativeGas,bloomFilter,setOfLogs])
   }
