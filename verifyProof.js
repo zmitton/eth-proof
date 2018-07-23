@@ -139,11 +139,9 @@ VerifyProof.trieValue = (path, value, parentNodes, root) => {
     path = path.toString('hex')
 
     console.log("PATH = 0x" + path);
-    console.log("RLP PARENT NODES: " + parentNodes);
 
     for (var i = 0 ; i < len ; i++) {
       currentNode = parentNodes[i];
-      console.log("RAW NODE: " + currentNode);
       console.log("RLP ENCODED NODE = 0x" + rlp.encode(currentNode).toString('hex'));
       console.log("HASHED NODE = 0x" + sha3(rlp.encode(currentNode)).toString('hex'));
       if(!nodeKey.equals( Buffer.from(sha3(rlp.encode(currentNode)),'hex'))){
