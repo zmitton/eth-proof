@@ -140,6 +140,7 @@ VerifyProof.trieValue = (path, value, parentNodes, root) => {
 
     console.log("PATH = 0x" + path);
     console.log("PARENT NODES: " + parentNodes);
+    console.log("PARENT NODES: " + rlp.decode(parentNodes));
 
     for (var i = 0 ; i < len ; i++) {
       currentNode = parentNodes[i];
