@@ -139,6 +139,7 @@ VerifyProof.trieValue = (path, value, parentNodes, root) => {
     path = path.toString('hex')
 
     console.log("PATH = 0x" + path);
+    console.log("PARENT NODES: " + parentNodes);
 
     for (var i = 0 ; i < len ; i++) {
       currentNode = parentNodes[i];
