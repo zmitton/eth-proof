@@ -9,7 +9,7 @@ describe('account state proof/verify full account [nonce, balance, storageRoot, 
 
     console.log("USING CHAIN DATA PATH:", chainDataPath, "YOU CAN NOT JUST USE MY PATH!!!")
     eP = new EP(
-      new Web3.providers.HttpProvider("https://gmainnet.infura.io"),
+      new Web3.providers.HttpProvider("https://mainnet.infura.io"),
       recentBlockHash,
       chainDataPath
     )
