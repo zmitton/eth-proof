@@ -1,6 +1,6 @@
 var Web3 = require('web3')
 var EP   = require('./../../index')
-var eP   = new EP(new Web3.providers.HttpProvider("https://gmainnet.infura.io"))
+var eP   = new EP(new Web3.providers.HttpProvider("https://mainnet.infura.io"))
 
 
 describe('getTransactionProof', function () {
@@ -121,4 +121,15 @@ describe('getTransactionProof', function () {
       done()
     })
   });
+
+  // This test is added for the edge case where transactions fail
+  it('should be able to request a proof from web3 and verify it', function (done) {
+    eP.getTransactionProof('0xdaa2fcc5d94f03348dc26bfacf84828ff563ccc57f6ab8260d2bd35b5d668ef8').then((result)=>{
+      EP.transaction(result.path, result.value, result.parentNodes, result.header, result.blockHash).should.be.true()
+      (false).to.be.true("not a tx. `get` should fail")
+    }).catch((e)=>{
+      done()
+    })
+  });
+
 });
