@@ -144,6 +144,31 @@ BuildProof.prototype.getCodeProof = function(address){
   })
 }
 
+BuildProof.prototype.getTransactionTrieRoot = function(txHash){
+  self = this;
+  return new Promise((accept, reject) => {
+    try{
+      self.web3.eth.getTransaction(txHash, (e,transaction) => {
+        if(e || !transaction){ return reject(e || "transaction not found")}
+        self.web3.eth.getBlock(transaction.blockHash, true, (e,block) => {
+          if(e || !block){ return reject(e || "block not found")}
+          var txTrie = new Trie();
+          b = block;
+          async.map(block.transactions, (siblingTx, cb2) => {//need siblings to rebuild trie
+            var path = rlp.encode(siblingTx.transactionIndex)
+            var rawSignedSiblingTx = new EthereumTx(squanchTx(siblingTx)).serialize()
+            txTrie.put(path, rawSignedSiblingTx, function (error) {
+              if(error != null){ cb2(error, null); }else{ cb2(null, true) }
+            })
+          }, (e,r) => {
+            return accept(txTrie._root)
+          });
+        })
+      })
+    }catch(e){ return reject(e)}
+  })
+}
+
 BuildProof.prototype.getTransactionProof = function(txHash){
   self = this;
   return new Promise((accept, reject) => {
@@ -175,6 +200,26 @@ BuildProof.prototype.getTransactionProof = function(txHash){
         })
       })
     }catch(e){ return reject(e)}
+  })
+}
+
+BuildProof.prototype.getReceiptTrieRoot = function(txHash){
+  self = this;
+  return new Promise ((accept, reject) => {
+    self.web3.eth.getTransactionReceipt(txHash, function(e,receipt){
+      if(e || !receipt){ return reject("receipt not found")}
+      self.web3.eth.getBlock(receipt.blockHash, false, function(e,block){
+        if(e || !block){ return reject("block not found")}
+        var receiptsTrie = new Trie();
+        async.map(block.transactions,function(siblingTxHash, cb2){
+          self.web3.eth.getTransactionReceipt(siblingTxHash, function(e,siblingReceipt){
+            putReceipt(siblingReceipt, receiptsTrie, block.number, cb2)
+          })
+        }, function(e,r){
+          return accept(receiptsTrie._root)
+        });
+      })
+    })
   })
 }
 
