@@ -24,7 +24,7 @@ This library has 2 main functions:
 You can initiallize an EP instance with a web3provider to get only the limited API for proof building (async promises, instance functions):
 
 ```javascript
-var eP = new EP(new Web3.providers.HttpProvider("https://gmainnet.infura.io"))
+var eP = new EP(new Web3.providers.HttpProvider("https://mainnet.infura.io"))
 ```
 
 * eP.getTransactionProof(txHash).then((prf)=>{})
@@ -36,7 +36,7 @@ To access the rest of the functionality you need to have a full node and init th
 ```javascript
 var chainDataPath = '/Users/zacharymitton/Library/Ethereum/geth/chaindata'
 var eP = new EP(
-  new Web3.providers.HttpProvider("https://gmainnet.infura.io"),
+  new Web3.providers.HttpProvider("https://mainnet.infura.io"),
   'a61b780b1c2f6a79d052e4b58234dc126fd7fdc9338705983d6068965ba8384b',
   chainDataPath //can be omitted if you only need TXs and receipts
 )
