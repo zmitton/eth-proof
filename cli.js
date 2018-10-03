@@ -7,7 +7,7 @@ var EP  = require('./index')
 // var recentBlockHash = 'c7b427ed2e0fcc24474437e676625186abefb4328d0807c2c36edb78c2d54082'
 
 var eP = new EP(
-  new Web3.providers.HttpProvider("https://gmainnet.infura.io"),
+  new Web3.providers.HttpProvider("https://mainnet.infura.io"),
   // recentBlockHash,
   // chainDataPath
 )

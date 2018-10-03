@@ -236,12 +236,17 @@ var putReceipt = (siblingReceipt, receiptsTrie, blockNum, cb2) => {//need siblin
   var bloomFilter = strToBuf(siblingReceipt.logsBloom)
   var setOfLogs = encodeLogs(siblingReceipt.logs)
   
-  if(siblingReceipt.status !== undefined && siblingReceipt.status != null){
+  if(siblingReceipt.status != undefined && siblingReceipt.status != null){
     var status = strToBuf(siblingReceipt.status)
-    var rawReceipt = rlp.encode([status,cummulativeGas,bloomFilter,setOfLogs])
+
+    if (status.toString('hex')==1) {
+      var rawReceipt = rlp.encode([1,cummulativeGas,bloomFilter,setOfLogs])
+    } else {
+      var rawReceipt = rlp.encode([0,cummulativeGas,bloomFilter,setOfLogs])
+    }
   }else{
     var postTransactionState = strToBuf(siblingReceipt.root)
-    var rawReceipt = rlp.encode([postTransactionState, cummulativeGas,bloomFilter,setOfLogs])
+    var rawReceipt = rlp.encode([postTransactionState,cummulativeGas,bloomFilter,setOfLogs])
   }
 
   receiptsTrie.put(rlp.encode(path), rawReceipt, function (error) {

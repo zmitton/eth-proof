@@ -141,11 +141,11 @@ VerifyProof.trieValue = (path, value, parentNodes, root) => {
     for (var i = 0 ; i < len ; i++) {
       currentNode = parentNodes[i];
       if(!nodeKey.equals( Buffer.from(sha3(rlp.encode(currentNode)),'hex'))){
-        console.log("nodeKey != sha3(rlp.encode(currentNode)): ", nodeKey, Buffer.from(sha3(rlp.encode(currentNode)),'hex'))
+        // console.log("nodeKey != sha3(rlp.encode(currentNode)): ", nodeKey, Buffer.from(sha3(rlp.encode(currentNode)),'hex'))
         return false;
       }
       if(pathPtr > path.length){
-        console.log("pathPtr >= path.length ", pathPtr,  path.length)
+        // console.log("pathPtr >= path.length ", pathPtr,  path.length)
         return false
       }
 
@@ -155,7 +155,7 @@ VerifyProof.trieValue = (path, value, parentNodes, root) => {
             if(currentNode[16] == rlp.encode(value)){
               return true;
             }else{
-              console.log('currentNode[16],rlp.encode(value): ', currentNode[16], rlp.encode(value))
+              // console.log('currentNode[16],rlp.encode(value): ', currentNode[16], rlp.encode(value))
               return false
             }
           }
@@ -170,7 +170,7 @@ VerifyProof.trieValue = (path, value, parentNodes, root) => {
             if(currentNode[1].equals(rlp.encode(value))){
               return true
             }else{
-              console.log("currentNode[1] == rlp.encode(value) ", currentNode[1], rlp.encode(value))
+              // console.log("currentNode[1] == rlp.encode(value) ", currentNode[1], rlp.encode(value))
               return false
             }
           }else{//extension node
@@ -178,7 +178,7 @@ VerifyProof.trieValue = (path, value, parentNodes, root) => {
           }
           break;
         default:
-          console.log("all nodes must be length 17 or 2");
+          // console.log("all nodes must be length 17 or 2");
           return false
       }
     }

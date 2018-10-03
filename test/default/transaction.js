@@ -1,6 +1,6 @@
 var Web3 = require('web3')
 var EP   = require('./../../index')
-var eP   = new EP(new Web3.providers.HttpProvider("https://gmainnet.infura.io"))
+var eP   = new EP(new Web3.providers.HttpProvider("https://mainnet.infura.io"))
 
 
 describe('getTransactionProof', function () {
