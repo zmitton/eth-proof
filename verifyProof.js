@@ -146,6 +146,7 @@ VerifyProof.trieValue = (path, value, parentNodes, root) => {
       }
       if(pathPtr > path.length){
         // console.log("pathPtr >= path.length ", pathPtr,  path.length)
+
         return false
       }
 
@@ -164,7 +165,6 @@ VerifyProof.trieValue = (path, value, parentNodes, root) => {
           // console.log(nodeKey, pathPtr, path[pathPtr])
           break;
         case 2:
-          // console.log(currentNode[0].toString('hex'), path, pathPtr)
           pathPtr += nibblesToTraverse(currentNode[0].toString('hex'), path, pathPtr)
           if(pathPtr == path.length){//leaf node
             if(currentNode[1].equals(rlp.encode(value))){
