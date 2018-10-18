@@ -121,13 +121,6 @@ describe('getReceiptProof', function () {
     })
   });
 
-    // This test is added for the edge case where transactions fail
-  it('should be able to request a proof from web3 and verify it', function (done) {
-    eP.getReceiptProof('0xdaa2fcc5d94f03348dc26bfacf84828ff563ccc57f6ab8260d2bd35b5d668ef8').then((result)=>{
-      EP.receipt(result.path, result.value, result.parentNodes, result.header, result.blockHash).should.be.true()
-      done()
-    }).catch((e)=>{console.log(e)})
-  });
 
     // This test is added for the edge case where transactions fail
   it('should be able to request a proof from web3 and verify it', function (done) {

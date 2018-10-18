@@ -239,11 +239,7 @@ var putReceipt = (siblingReceipt, receiptsTrie, blockNum, cb2) => {//need siblin
   if(siblingReceipt.status != undefined && siblingReceipt.status != null){
     var status = strToBuf(siblingReceipt.status)
 
-    if (status.toString('hex')==1) {
-      var rawReceipt = rlp.encode([1,cummulativeGas,bloomFilter,setOfLogs])
-    } else {
-      var rawReceipt = rlp.encode([0,cummulativeGas,bloomFilter,setOfLogs])
-    }
+
   }else{
     var postTransactionState = strToBuf(siblingReceipt.root)
     var rawReceipt = rlp.encode([postTransactionState,cummulativeGas,bloomFilter,setOfLogs])
