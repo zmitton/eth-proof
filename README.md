@@ -1,4 +1,16 @@
 # Eth Proof
+
+### Deprecation Warning
+This library is mostly unnecessary now.
+
+see [EIP 1186](https://github.com/ethereum/EIPs/issues/1186) by @simon-jentzsch 
+
+You should be able to do the "build proof" functions by simply using the new RPC calls.
+
+And you should be able to verify them using @wanderer and others' [merkle-patricia-tree](https://github.com/ethereumjs/merkle-patricia-tree/blob/master/test/proof.js)
+
+###
+
 ## General Ethereum Merkle Patricia Trie (tree) Proofs
 
 ### Use
