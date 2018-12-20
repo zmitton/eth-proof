@@ -1,65 +1,68 @@
+const Trie = require('merkle-patricia-tree')
 const sha3 = require('js-sha3').keccak_256
 const rlp = require('rlp');
 
 // public methods all prove commitment to a blockHash
 // all args currently expect Buffers
-//to do: they should all only take one proofNodes array merge header into parentNodes 
+//to do: they should all only take one proofNodes array merge header into branch 
 VerifyProof = () => {}
-VerifyProof.header = (header, blockHash) => {
+VerifyProof.verifyHeader = (header, blockHash) => {
   try{
-    return Buffer.from(sha3(rlp.encode(header)),'hex').equals(blockHash);
+    return Buffer.from(sha3(header),'hex').equals(blockHash);
+    // return Buffer.from(sha3(rlp.encode(header)),'hex').equals(blockHash);
   }catch(e){ console.log(e) }
   return false
 }
-VerifyProof.headerElement = (index, value, header, blockHash) => {
+VerifyProof.verifyHeaderElement = (index, value, header, blockHash) => {
   try{
     if(value.equals(header[index])){
+      console.log("HETE ", Buffer.from(sha3(rlp.encode(header)),'hex').equals(blockHash))
       return Buffer.from(sha3(rlp.encode(header)),'hex').equals(blockHash);
     }
   }catch(e){ console.log(e) }
   return false
 }
 
-VerifyProof.accountNonce = (address, nonce, parentNodes, header, blockHash) => {
-  return VerifyProof._accountElement(0, address, nonce, parentNodes, header, blockHash)
+VerifyProof.verifyNonce = (address, nonce, branch, header, blockHash) => {
+  return VerifyProof._verifyAccountElement(0, address, nonce, branch, header, blockHash)
 }
-VerifyProof.balance = (address, balance, parentNodes, header, blockHash) => {
-  return VerifyProof._accountElement(1, address, balance, parentNodes, header, blockHash)
+VerifyProof.verifyBalance = (address, balance, branch, header, blockHash) => {
+  return VerifyProof._verifyAccountElement(1, address, balance, branch, header, blockHash)
 }
-VerifyProof.storageRoot = (address, storageRoot, parentNodes, header, blockHash) => {
-  return VerifyProof._accountElement(2, address, storageRoot, parentNodes, header, blockHash)
+VerifyProof.verifyStorageRoot = (address, storageRoot, branch, header, blockHash) => {
+  return VerifyProof._verifyAccountElement(2, address, storageRoot, branch, header, blockHash)
 }
-VerifyProof.codeHash = (address, codeHash, parentNodes, header, blockHash) => {
-  return VerifyProof._accountElement(3, address, codeHash, parentNodes, header, blockHash)
+VerifyProof.verifyCodeHash = (address, codeHash, branch, header, blockHash) => {
+  return VerifyProof._verifyAccountElement(3, address, codeHash, branch, header, blockHash)
 }
-VerifyProof.code = (address, code, parentNodes, header, blockHash) => {
+VerifyProof.verifyCode = (address, code, branch, header, blockHash) => {
   try{
-    var account = valueFrom(parentNodes)
+    var account = valueFrom(branch)
     if(Buffer.from(sha3(code),'hex').equals(account[3])){
-      return VerifyProof.codeHash(address, account[3], parentNodes, header, blockHash)
+      return VerifyProof.verifyCodeHash(address, account[3], branch, header, blockHash)
     }
   }catch(e){ console.log(e) }
   return false
 }
-VerifyProof._accountElement = (accountIndex, address, targetValue, parentNodes, header, blockHash) => {
+VerifyProof._verifyAccountElement = (accountIndex, address, targetValue, branch, header, blockHash) => {
   try{
-    var account = valueFrom(parentNodes) // decoded last last
-    if(VerifyProof.account(address, account, parentNodes, header, blockHash)){
+    var account = valueFrom(branch) // decoded last last
+    if(VerifyProof.verifyAccount(address, account, branch, header, blockHash)){
       return account[accountIndex].equals(targetValue)
     }
   }catch(e){ console.log(e) }
   return false
 }
-VerifyProof.storageAtIndex = (storageIndex, storageValue, storageParentNodes, address, accountParentNodes, header, blockHash) => {
+VerifyProof.verifyStorageAtIndex = (storageIndex, storageValue, storagebranch, address, accountbranch, header, blockHash) => {
   try{
     var storagePath = Buffer.from(sha3(Buffer.from(leftPad(storageIndex.toString('hex')),'hex')),'hex')
-    return VerifyProof.storage(storagePath, storageValue, storageParentNodes, address, accountParentNodes, header, blockHash)
+    return VerifyProof.verifyStorage(storagePath, storageValue, storagebranch, address, accountbranch, header, blockHash)
   }catch(e){ console.log(e) }
   return false
 }
 
 // untested for multi dimensional mappings
-VerifyProof.storageMapping = (storageIndex, mappings, storageValue, storageParentNodes, address, accountParentNodes, header, blockHash) => {
+VerifyProof.verifyStorageMapping = (storageIndex, mappings, storageValue, storagebranch, address, accountbranch, header, blockHash) => {
   try{
     var pathBuilder = Buffer.from(leftPad(storageIndex.toString('hex')),'hex')
     
@@ -69,30 +72,30 @@ VerifyProof.storageMapping = (storageIndex, mappings, storageValue, storageParen
     pathBuilder = Buffer.from(sha3(pathBuilder),'hex')
 
     var storagePath = Buffer.from(sha3(pathBuilder),'hex')
-    return VerifyProof.storage(storagePath, storageValue, storageParentNodes, address, accountParentNodes, header, blockHash)
+    return VerifyProof.verifyStorage(storagePath, storageValue, storagebranch, address, accountbranch, header, blockHash)
   }catch(e){ console.log(e) }
   return false
 }
 
-VerifyProof.storage = (storagePath, storageValue, storageParentNodes, address, accountParentNodes, header, blockHash) => {
+VerifyProof.verifyStorage = (storagePath, storageValue, storagebranch, address, accountbranch, header, blockHash) => {
   try{
-    var storageTrieRoot = valueFrom(accountParentNodes)[2]
-    if(VerifyProof.storageRoot(address, storageTrieRoot, accountParentNodes, header, blockHash)){
+    var storageTrieRoot = valueFrom(accountbranch)[2]
+    if(VerifyProof.verifyStorageRoot(address, storageTrieRoot, accountbranch, header, blockHash)){
       //account is already proven during `storageRoot`
 
-      return VerifyProof.trieValue(storagePath, storageValue, storageParentNodes, storageTrieRoot)
+      return VerifyProof.verifyTrieValue(storagePath, storageValue, storagebranch, storageTrieRoot)
     }
   }catch(e){ console.log(e) }
   return false
 }
 
-// VerifyProof.logBloom = () => {/* probably dont care. Arent these just for fast lookups? */}
-// VerifyProof.postTransactionState = () => { }
-// VerifyProof.cummulativeGas = () => { }
-VerifyProof.log = (logIndex, txPath, log, parentNodes, header, blockHash) => {
+// VerifyProof.verifyLogBloom = () => {/* probably dont care. Arent these just for fast lookups? */}
+// VerifyProof.verifyostTransactionState = () => { }
+// VerifyProof.verifyCummulativeGas = () => { }
+VerifyProof.verifyLog = (logIndex, txPath, log, branch, header, blockHash) => {
   try{
-    var receipt = valueFrom(parentNodes)
-    if(VerifyProof.receipt(txPath, receipt, parentNodes, header, blockHash)){
+    var receipt = valueFrom(branch)
+    if(VerifyProof.verifyReceipt(txPath, receipt, branch, header, blockHash)){
       if(receipt[3][logIndex][0].equals(log[0]) && receipt[3][logIndex][2].equals(log[2])){
         return receipt[3][logIndex][1].every((elem, i)=>{
           return elem.equals(log[1][i])
@@ -101,26 +104,38 @@ VerifyProof.log = (logIndex, txPath, log, parentNodes, header, blockHash) => {
     }
   }catch(e){ console.log(e) }
 }
-// VerifyProof._receiptElement = (receiptIndex, path, targetValue, parentNodes, header, blockHash) => {
+// VerifyProof.verify receiptElement = (receiptIndex, path, targetValue, branch, header, blockHash) => {
 // }
 
 
-// account can be a contract 
-VerifyProof.account = (address, account, parentNodes, header, blockHash) => {
+// account or contract 
+VerifyProof.verifyAccount = (address, account, branch, header, blockHash) => {
+  if(VerifyProof.verifyHeader(header, blockHash)){
+    let stateRoot = rlp.decode(header)[3]
+    return VerifyProof._verifyAccount(address, account, branch, stateRoot)
+    // console.log("stateRoot1", stateRoot)
+    // if(VerifyProof._verifyValueInTrieIndex(3, sha3OfAddress, account, branch, header, blockHash)){
+    // }
+  }
+}
+VerifyProof._verifyAccount = (address, account, branch, stateRoot) => {
   var sha3OfAddress = Buffer.from(sha3(address),'hex')
-  return VerifyProof._valueInTrieIndex(3, sha3OfAddress, account, parentNodes, header, blockHash)
+  console.log("sha3OfAddress",sha3OfAddress)
+  return VerifyProof.verifyTrieValue(sha3OfAddress, account, branch, stateRoot)
+  // return VerifyProof._verifyValueInTrieIndex(3, sha3OfAddress, account, branch, header, blockHash)
 }
-VerifyProof.transaction = (path, tx, parentNodes, header, blockHash) => {
-  return VerifyProof._valueInTrieIndex(4, path, tx, parentNodes, header, blockHash)
+
+VerifyProof.verifyTransaction = (path, tx, branch, header, blockHash) => {
+  return VerifyProof._verifyValueInTrieIndex(4, path, tx, branch, header, blockHash)
 }
-VerifyProof.receipt = (path, receipt, parentNodes, header, blockHash) => {
-  return VerifyProof._valueInTrieIndex(5, path, receipt, parentNodes, header, blockHash)
+VerifyProof.verifyReceipt = (path, receipt, branch, header, blockHash) => {
+  return VerifyProof._verifyValueInTrieIndex(5, path, receipt, branch, header, blockHash)
 }
-VerifyProof._valueInTrieIndex = (trieIndex, path, value, parentNodes, header, blockHash) => {
+VerifyProof._verifyValueInTrieIndex = (trieIndex, path, value, branch, header, blockHash) => {
   try{
     var trieRoot = header[trieIndex]
-    if(VerifyProof.headerElement(trieIndex, trieRoot, header, blockHash)){
-      return VerifyProof.trieValue(path, value, parentNodes, trieRoot)
+    if(VerifyProof.verifyHeaderElement(trieIndex, trieRoot, header, blockHash)){
+      return VerifyProof.verifyTrieValue(path, value, branch, trieRoot)
     }
   }catch(e){ console.log(e) }
   return false;
@@ -128,80 +143,138 @@ VerifyProof._valueInTrieIndex = (trieIndex, path, value, parentNodes, header, bl
 
 // proves commitment to its root only (not a blockHash). I should almost make this 
 // private although its very fundamental so i wont. 
-VerifyProof.trieValue = (path, value, parentNodes, root) => {
-  try{
-    var currentNode;
-    var len = parentNodes.length;
-    var rlpTxFromPrf = parentNodes[len - 1][parentNodes[len - 1].length - 1];
-    var nodeKey = root;
-    var pathPtr = 0;
+function test(proof){
+  thing = []
+  for (var i = 0; i < proof.length; i++) {
+    thing[i] = proof[i].toString('hex')
+  }
+  return thing
+}
 
-    path = path.toString('hex')
+VerifyProof.verifyTrieValue = (path, value, branch, root) => {
+  // console.log("zpath ", path)
+  // console.log("zvalue ", rlp.decode(value))
+  // console.log("zbranch ", branch)
+  // console.log("zbranchdecodeLast ", rlp.decode(rlp.decode(branch)[rlp.decode(branch).length-1]))
+  // console.log("zbranchvalueAccount ", rlp.decode(rlp.decode(rlp.decode(branch)[rlp.decode(branch).length-1])[1]))
+  // console.log()
+  let complete, response, error = undefined
 
-    for (var i = 0 ; i < len ; i++) {
-      currentNode = parentNodes[i];
-      if(!nodeKey.equals( Buffer.from(sha3(rlp.encode(currentNode)),'hex'))){
-        // console.log("nodeKey != sha3(rlp.encode(currentNode)): ", nodeKey, Buffer.from(sha3(rlp.encode(currentNode)),'hex'))
-        return false;
-      }
-      if(pathPtr > path.length){
-        // console.log("pathPtr >= path.length ", pathPtr,  path.length)
-
-        return false
-      }
-
-      switch(currentNode.length){
-        case 17://branch node
-          if(pathPtr == path.length){
-            if(currentNode[16] == rlp.encode(value)){
-              return true;
-            }else{
-              // console.log('currentNode[16],rlp.encode(value): ', currentNode[16], rlp.encode(value))
-              return false
-            }
-          }
-          nodeKey = currentNode[parseInt(path[pathPtr],16)] //must == sha3(rlp.encode(currentNode[path[pathptr]]))
-          pathPtr += 1
-          // console.log(nodeKey, pathPtr, path[pathPtr])
-          break;
-        case 2:
-          pathPtr += nibblesToTraverse(currentNode[0].toString('hex'), path, pathPtr)
-          if(pathPtr == path.length){//leaf node
-            if(currentNode[1].equals(rlp.encode(value))){
-              return true
-            }else{
-              // console.log("currentNode[1] == rlp.encode(value) ", currentNode[1], rlp.encode(value))
-              return false
-            }
-          }else{//extension node
-            nodeKey = currentNode[1]
-          }
-          break;
-        default:
-          // console.log("all nodes must be length 17 or 2");
-          return false
-      }
+  function cb(e,r){
+      console.log("zzzzzza", e)
+      console.log("zzzzzza", r)
+    try{
+      complete = true
+      error = e
+      response = r
+    }catch(e){
     }
-  }catch(e){ console.log(e); return false }
-  return false
+  }
+
+  var accountNodes = []
+  var branchArr = rlp.decode(branch)
+  for (var i = 0; i < branchArr.length; i++) {
+    accountNodes.push('0x'+branchArr[i].toString('hex'))
+  }
+  // console.log("QQQQQ", '0x'+root.toString('hex'), '0x'+path.toString('hex'), accountNodes)
+
+  console.log("zzzzzz", value.toString('hex'))
+   try{
+    Trie.verifyProof('0x'+root.toString('hex'), path, accountNodes, cb)
+     while(!complete){  }
+   }catch(e){
+    console.log("ooooooooo")
+   }
+
+  console.log("zzzzzz", response.toString('hex'))
+  // console.log("zzzzzz", value.toString('hex'))
+  console.log("")
+  if(error){
+    if(error == 'Key does not match with the proof one (extention|leaf)'){
+      return false
+    }else{
+      return false
+    }
+  }else{
+    return true//response.equals(value) ;
+  }
+
+  // try{
+  //   var branchArr = rlp.decode(branchArrBytes)
+  //   // console.log("BBBB", branchArr)
+  //   var currentNode;
+  //   var len = branchArr.length;
+  //   var rlpTxFromPrf = branchArr[len - 1][branchArr[len - 1].length - 1];
+  //   var nodeKey = root;
+  //   var pathPtr = 0;
+
+  //   path = path.toString('hex')
+
+  //   for (var i = 0 ; i < len ; i++) {
+  //     currentNode = rlp.decode(branchArr[i]);
+  //     if(!nodeKey.equals( Buffer.from(sha3(rlp.encode(currentNode)),'hex'))){
+  //       console.log("nodeKey != sha3(rlp.encode(currentNode)): ", nodeKey, Buffer.from(sha3(currentNode),'hex'), "currentNode", currentNode.toString('hex') )
+  //       return false;
+  //     }
+  //     if(pathPtr > path.length){
+  //       console.log("pathPtr >= path.length ", pathPtr,  path.length)
+
+  //       return false
+  //     }
+
+  //     switch(currentNode.length){
+  //       case 17://branchArr node
+  //         if(pathPtr == path.length){
+  //           if(currentNode[16] == rlp.encode(value)){
+  //             return true;
+  //           }else{
+  //             console.log('currentNode[16],rlp.encode(value): ', currentNode[16], rlp.encode(value))
+  //             return false
+  //           }
+  //         }
+  //         nodeKey = currentNode[parseInt(path[pathPtr],16)] //must == sha3(rlp.encode(currentNode[path[pathptr]]))
+  //         pathPtr += 1
+  //         console.log(nodeKey, pathPtr, path[pathPtr])
+  //         break;
+  //       case 2:
+  //         pathPtr += nibblesToTraverse(currentNode[0].toString('hex'), path, pathPtr)
+  //         if(pathPtr == path.length){//leaf node
+  //           if(currentNode[1].equals(rlp.encode(value))){
+  //             return true
+  //           }else{
+  //             console.log("currentNode[1] == rlp.encode(value) ", currentNode[1], rlp.encode(value))
+  //             return false
+  //           }
+  //         }else{//extension node
+  //           nodeKey = currentNode[1]
+  //         }
+  //         break;
+  //       default:
+  //         console.log("all nodes must be length 17 or 2");
+  //         return false
+  //     }
+  //   }
+  // }catch(e){ console.log(e); return false }
+  // return false
 }
 
 
-var nibblesToTraverse = (encodedPartialPath, path, pathPtr) => { 
-  if(encodedPartialPath[0] == 0 || encodedPartialPath[0] == 2){
-    var partialPath = encodedPartialPath.slice(2)
-  }else{
-    var partialPath = encodedPartialPath.slice(1)
-  }
+// var nibblesToTraverse = (encodedPartialPath, path, pathPtr) => { 
+//   if(encodedPartialPath[0] == 0 || encodedPartialPath[0] == 2){
+//     var partialPath = encodedPartialPath.slice(2)
+//   }else{
+//     var partialPath = encodedPartialPath.slice(1)
+//   }
 
-  if(partialPath == path.slice(pathPtr, pathPtr + partialPath.length)){
-    return partialPath.length
-  }else{
-    throw new Error("path was wrong")
-  }
-}
-var valueFrom = (parentNodes) => { // last last item decoded
-  return rlp.decode(parentNodes[parentNodes.length - 1][parentNodes[parentNodes.length - 1].length - 1])
+//   if(partialPath == path.slice(pathPtr, pathPtr + partialPath.length)){
+//     return partialPath.length
+//   }else{
+//     throw new Error("path was wrong")
+//   }
+// }
+var valueFrom = (branch) => { // last last item decoded
+  branch = rlp.decode(branch)
+  return rlp.decode(branch[branch.length - 1][branch[branch.length - 1].length - 1])
 }
 
 var leftPad = (str) => {
