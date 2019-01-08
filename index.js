@@ -1,7 +1,4 @@
-var VerifyProof = require('./verifyProof');
-var BuildProof = require('./buildProof');
+const BuildProof =  require('./buildProof.js')
+const VerifyProof =  require('./verifyProof.js')
 
-//merging all functionality 
-var EthProof = Object.assign(BuildProof, VerifyProof);
-
-module.exports = EthProof
+module.exports = { BuildProof, VerifyProof }

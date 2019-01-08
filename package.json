@@ -2,7 +2,7 @@
   "name": "eth-proof",
   "version": "0.3.2",
   "description": "proving things in the Ethereum patricia tries (trees)",
-  "main": "index.js",
+  "main": "ethProof.js",
   "dependencies": {
     "async": "^2.6.1",
     "ethereumjs-block": "^1.7.1",
@@ -29,6 +29,7 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "mocha": "^5.2.0",
+    "promisfy": "^1.1.4",
     "should": "^13.2.3"
   }
 }
