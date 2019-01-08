@@ -165,18 +165,18 @@ class BuildProof{
   }
 
   static _serializeTx(rpcTx){
-    rpcTx.gasPrice = '0x' + rpcTx.gasPrice.toString(16)
-    rpcTx.value = '0x' + rpcTx.value.toString(16)
+    rpcTx.gasPrice = '0x' + parseInt(rpcTx.gasPrice).toString(16)
+    rpcTx.value = '0x' + parseInt(rpcTx.value).toString(16)
     let tx = new EthereumTx(rpcTx)
     //this could be wrong
-    if(rpcTx.hash == "0xb53f752216120e8cbe18783f41c6d960254ad59fac16229d4eaec5f7591319de"){
+    // if(rpcTx.hash == "0xb53f752216120e8cbe18783f41c6d960254ad59fac16229d4eaec5f7591319de"){
       // console.log("rpctx() ", rpcTx )
-      // console.log("tx.hash() ", sha3(tx.serialize()) )
+      // console.log("tx.hash!!() ", sha3(tx.serialize()) )
       // console.log("tx.serialize() ", tx.serialize().toString("hex")) 
       // console.log("tx.serialize() ", tx.serialize()) 
       // console.log("tx.serialize()sha ", sha3(tx.serialize()))
       // console.log("tx.serialize.rlp() ", Rlp.decode(tx.serialize()))
-    }
+    // }
     return tx.serialize();
   }
   static _strToBuf(input){ 

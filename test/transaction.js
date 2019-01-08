@@ -5,8 +5,8 @@ var buildProof = new BuildProof("https://mainnet.infura.io")
 
 describe('getTransactionProof', function () {
   it('should be able to request a proof from web3 and verify it', function (done) {
-    buildProof.getTransactionProof('0x299a93acf5b100336455ef6ecda39e22329fb750e6264c8ee44f579947349de9').then((result)=>{
-    // buildProof.getTransactionProof('0xb53f752216120e8cbe18783f41c6d960254ad59fac16229d4eaec5f7591319de').then((result)=>{
+    // buildProof.getTransactionProof('0x299a93acf5b100336455ef6ecda39e22329fb750e6264c8ee44f579947349de9').then((result)=>{
+    buildProof.getTransactionProof('0xb53f752216120e8cbe18783f41c6d960254ad59fac16229d4eaec5f7591319de').then((result)=>{
       
       // console.log("PROOF", result)
       // console.log("THINGS ", VerifyProof.transaction(result.path, result.value, result.branch, result.header, result.blockHash))
