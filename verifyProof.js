@@ -23,23 +23,23 @@ class VerifyProof{
     let accountVer = VerifyProof.trieValue(hashedAddress, account, branch, stateRoot)
     return headerVer && accountVer
   }
-  static transaction(txIndex, tx, branch, header, blockHash) {
+  static transaction(rlpTxIndex, tx, branch, header, blockHash) {
     let txRoot = Rlp.decode(header)[4]
 
-    console.log("txRoot", Rlp.decode(header))
-    console.log("branch", Rlp.decode(branch)[0])
-    console.log("branch", sha3(Rlp.encode(Rlp.decode(branch)[0])))
+    // console.log("txRoot", Rlp.decode(header))
+    // console.log("branch", Rlp.decode(branch))
+    // console.log("branch", sha3(Rlp.encode(Rlp.decode(branch)[0])))
 
 
     let headerVer = VerifyProof.header(header, blockHash)
-    let txVer = VerifyProof.trieValue(txIndex, tx, branch, txRoot)
+    let txVer = VerifyProof.trieValue(rlpTxIndex, tx, branch, txRoot)
     return headerVer && txVer
   }
-  static receipt(txIndex, receipt, branch, header, blockHash) {
+  static receipt(rlpTxIndex, receipt, branch, header, blockHash) {
     let receiptsRoot = Rlp.decode(header)[5]
-
+// console.log("hhhh",rlpTxIndex, receipt, branch, header, blockHash)
     let headerVer = VerifyProof.header(header, blockHash)
-    let receiptVer = VerifyProof.trieValue(txIndex, receipt, branch, receiptsRoot)
+    let receiptVer = VerifyProof.trieValue(rlpTxIndex, receipt, branch, receiptsRoot)
     return headerVer && receiptVer
   }
 
@@ -62,8 +62,8 @@ class VerifyProof{
       throw new Error("invalid bytecode or proof given")
     }
   }
-  static log(logIndex, log, txIndex, receipt, branch, header, blockHash){
-    let receiptVer = VerifyProof.receipt(txIndex, receipt, branch, header, blockHash)
+  static log(logIndex, log, rlpTxIndex, receipt, branch, header, blockHash){
+    let receiptVer = VerifyProof.receipt(rlpTxIndex, receipt, branch, header, blockHash)
     if(Rlp.encode(Rlp.decode(receipt)[3][logIndex]).equals(log)){
       return true
     }else{
@@ -75,8 +75,11 @@ class VerifyProof{
     // console.log("zzzz","path",path.toString("hex"), "value",value.toString("hex"), "branch",Rlp.decode(branch), "root", root.toString("hex"))
     // console.log("last branch",Rlp.decode(branch)[Rlp.decode(branch).length-1][1].toString("hex"))
     // console.log("branch",Rlp.decode(branch))
+    // console.log("THING",sha3(Rlp.encode(Rlp.decode(branch)[1])))
+    console.log("all", path, value, branch, root)
     let complete, error = false
     branch = VerifyProof._encodeBranch(branch)
+    // console.log("branch2",branch)
 
     Trie.verifyProof('0x'+root.toString('hex'), path, branch, (e,r)=>{
       complete = true
@@ -95,7 +98,7 @@ class VerifyProof{
     var encodedBranch = []
     var branchArr = Rlp.decode(inputBranch)
     for (var i = 0; i < branchArr.length; i++) {
-      encodedBranch.push('0x'+branchArr[i].toString('hex'))
+      encodedBranch.push('0x' + Rlp.encode(branchArr[i]).toString('hex'))
     }
     return encodedBranch
   }
