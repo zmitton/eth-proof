@@ -1,5 +1,6 @@
 const Trie = require('merkle-patricia-tree')
 const sha3 = require('js-sha3').keccak_256
+const Util = require('ethereumjs-util')
 const Rlp = require('rlp');
 
 // public methods all prove commitment to a blockHash
@@ -62,9 +63,14 @@ class VerifyProof{
       throw new Error("invalid bytecode or proof given")
     }
   }
-  static log(logIndex, log, rlpTxIndex, receipt, branch, header, blockHash){
+  static log(rlpLogIndex, log, rlpTxIndex, receipt, branch, header, blockHash){
+    let logIndex = Util.bufferToInt(Rlp.decode(rlpLogIndex))
     let receiptVer = VerifyProof.receipt(rlpTxIndex, receipt, branch, header, blockHash)
-    if(Rlp.encode(Rlp.decode(receipt)[3][logIndex]).equals(log)){
+    // console.log("LL", rlpLogIndex, "LLL", logIndex)
+    // console.log("LLLLL", Rlp.decode(receipt))
+    // console.log("LLLLL", parseInt(Rlp.decode(rlpLogIndex)))
+    // console.log("LLLLL", Rlp.decode(receipt)[3][Rlp.decode(rlpLogIndex)])
+    if(Rlp.encode(Rlp.decode(receipt)[3][logIndex]).equals(log)){ 
       return true
     }else{
       throw new Error("invalid bytecode or proof given")
@@ -72,23 +78,27 @@ class VerifyProof{
   }
 
   static trieValue(path, value, branch, root){
-    // console.log("zzzz","path",path.toString("hex"), "value",value.toString("hex"), "branch",Rlp.decode(branch), "root", root.toString("hex"))
+    console.log("zzzz","path",path.toString("hex"), "value",value.toString("hex"), "branch",Rlp.decode(branch), "root", root.toString("hex"))
     // console.log("last branch",Rlp.decode(branch)[Rlp.decode(branch).length-1][1].toString("hex"))
     // console.log("branch",Rlp.decode(branch))
     // console.log("THING",sha3(Rlp.encode(Rlp.decode(branch)[1])))
-    console.log("all", path, value, branch, root)
-    let complete, error = false
+    // console.log("all", path, value, branch, root)
+    let complete, error, response = false
     branch = VerifyProof._encodeBranch(branch)
     // console.log("branch2",branch)
 
     Trie.verifyProof('0x'+root.toString('hex'), path, branch, (e,r)=>{
-      complete = true
       error = e
+      response = r
+      complete = true
     })
+
     while(!complete){/*wait*/}
     
     if(error){
       throw Error(error)
+    }else if(!value.equals(response)){
+      throw new Error('Mismatched value for branch given')
     }else{
       return true
     }

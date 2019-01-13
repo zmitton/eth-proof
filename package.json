@@ -15,8 +15,8 @@
     "levelup": "^1.3.9",
     "memdown": "^3.0.0",
     "merkle-patricia-tree": "^2.3.2",
+    "promisfy": "github:zmitton/promisfy#master",
     "rlp": "^2.1.0",
-    "promisfy": "^1.1.4",
     "web3": "^1.0.0-beta.36"
   },
   "scripts": {
