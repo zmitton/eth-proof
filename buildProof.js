@@ -123,22 +123,22 @@ class BuildProof{
     // })
 
 
-    // let path = Rlp.encode(receipt.transactionIndex)
-    // var [rawReceiptNode,_,stack] = await promisfy(trie.findPath, trie)(path)
-    // console.log("zac", [rawReceiptNode,_,stack])
-    return new Promise((accept, reject)=>{
-      trie.findPath(Rlp.encode(receipt.transactionIndex), function(e,rawReceiptNode,remainder,stack){
-        if(e){ return reject(e) }
-        var prf = {
+    let path = Rlp.encode(receipt.transactionIndex)
+    var [rawReceiptNode,_,stack] = await promisfy(trie.findPath, trie)(path)
+    // console.log("rawReceiptNode:", rawReceiptNode, "remainder", _, "stack:", stack, "stack.l", stack.length)
+    // return new Promise((accept, reject)=>{
+      // trie.findPath(path, function(e,rawReceiptNode,remainder,stack){
+        // if(e){ return reject(e) }
+        return {
           path:      Rlp.encode(receipt.transactionIndex),
           value:     rawReceiptNode.value,
           branch:     BuildProof._rawStack(stack),
           header:    BuildProof._getHeaderBytes(block),
           blockHash: BuildProof._strToBuf(receipt.blockHash)
         }
-        return accept(prf)
-      })
-    })
+        // return accept(prf)
+      // })
+    // })
 
     // return {
     //   blockHash: BuildProof._strToBuf(receipt.blockHash),
