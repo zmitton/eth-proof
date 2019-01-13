@@ -1,13 +1,14 @@
 # Eth Proof
 
-### Deprecation Warning
-This library is mostly unnecessary now.
+### Update and Deprecation Warning
 
-see [EIP 1186](https://github.com/ethereum/EIPs/issues/1186) by @simon-jentzsch 
+The recent [EIP 1186](https://github.com/ethereum/EIPs/issues/1186) by @simon-jentzsch has finally enabled support for state and storage proofs.
+~~This library is mostly unnecessary now.~~
+This library is STILL required to get **transaction**, **receipt** and **log** proofs.
 
-You should be able to do the "build proof" functions by simply using the new RPC calls.
+However this version (version 0) does not support the new ways to directly query for state and storage proofs. Version 1.0.0 will support everything with a nice async/await API and much cleaner code (as well as other additional features) and will be published by about January 20th 2019. It's not going to be backwards compatible (thus the major version bump).
 
-And you should be able to verify them using @wanderer and others' [merkle-patricia-tree](https://github.com/ethereumjs/merkle-patricia-tree/blob/master/test/proof.js)
+So you can continue to use this if you only need tx/receipt/logs, or upgrade for new API with the full support which I'll continue to improve without need for breaking backwards compatibility for some time.
 
 ###
 
@@ -112,9 +113,9 @@ If you have a geth full node you can modify `chainDataPath`a and `RecentBlockHas
 
 Situation
 ---------
-For txproof building and recieptProof building access to leveldb is not required. we find the relevent block and rebuild the trie (which is a small trie on with tx from that single block). This is why we can use rpc calls for it, so you just give it a `provider`.
+For txproof building and recieptProof building access to leveldb is not required. we find the relevent block and rebuild the trie (which is a small trie on with tx from that single block). This is why we can use rpc calls for it, so you need give it an http `provider`.
 
-For state (accounts, storage, all that stuff) you cant get the proof from rpc calls, because the state trie is a huge trie (>20gb) and there are no RPC calls to get the proof data needed (the data is a bunch of "parent nodes"). Its very easy to get directly from the levelDB however, and theirfore, we will be making an EIP which can hopefully add RPC support for returning it. We can name the methods after standard RPC methods with the word `proof` concatenated on them, and have them take 1 extra `blockHash` param. In the meantime, x-relay can run our own custom ethereum servers which support these proof requests.
+~~For state (accounts, storage, all that stuff) you cant get the proof from rpc calls, because the state trie is a huge trie (>20gb) and there are no RPC calls to get the proof data needed (the data is a bunch of "parent nodes"). Its very easy to get directly from the levelDB however, and theirfore, we will be making an EIP which can hopefully add RPC support for returning it. We can name the methods after standard RPC methods with the word `proof` concatenated on them, and have them take 1 extra `blockHash` param. In the meantime, x-relay can run our own custom ethereum servers which support these proof requests.~~ no longer true. see update above
 
 
 Goals
@@ -131,7 +132,7 @@ We are also finding it useful to relay ethereum to itself. It sounds weird, but 
 
 Proposed RPC spec (WIP)
 -----------------
-still thinkin about this
+Although we now have `eth_getProof`, we still could use RPC calls for `eth_getTransactionProof` and `getReceiptProof` in order to make the query more efficient. Currently we have to request all the block data and for receipts we have to make a seperate RPC call for every single TX in that block, so this could potentially be a 100x efficiency improvement.
 
 ```
 curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionProof","params":["0xc55e2b90168af6972193c1f86fa4d7d7b31a29c156665d15b9cd48618b5177ef", "0xbeab0aa2411b7ab17f30a99d3cb9c6ef2fc5426d6ad6fd9e2a26a6aed1d1055b"],"id":1}'
