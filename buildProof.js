@@ -1,14 +1,12 @@
 const Trie = require('merkle-patricia-tree')
-const Rlp = require('rlp')
-const sha3 = require('js-sha3').keccak_256
-
-const async = require('async')
-
 const Web3 = require('web3')
+const Rlp = require('rlp')
 const EthereumTx = require('ethereumjs-tx')
-// console.log('EthereumTx', EthereumTx)
 const EthereumBlock = require('ethereumjs-block/from-rpc')
-const levelup = require('levelup')
+// const sha3 = require('js-sha3').keccak_256
+// const async = require('async')
+// console.log('EthereumTx', EthereumTx)
+// const levelup = require('levelup')
 
 const BN = require('bn.js')
 
@@ -32,7 +30,7 @@ class BuildProof{
       params: [address, storageSlots, "0x" + blockResponse.number.toString(16)],
       id: 0
     })
-
+    if(prfResponse.error){ throw new Error(prfResponse.error.message) }
     let output = {}
 
     output.block = blockResponse
@@ -182,7 +180,7 @@ class BuildProof{
   static _getAccountNodesBytes(accountNodes){
     let rawAccountNodes = []
     for (var i = 0; i < accountNodes.length; i++) {
-      rawAccountNodes.push(BuildProof._strToBuf(accountNodes[i]))
+      rawAccountNodes.push(Rlp.decode(BuildProof._strToBuf(accountNodes[i])))
     }
     return Rlp.encode(rawAccountNodes)
   }
