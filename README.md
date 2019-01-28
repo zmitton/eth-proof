@@ -106,3 +106,13 @@ its possible but must construct the proof with a few amendments to EV.value.
 The client can initialize its `state-tree` object using the ParentNodes from the proof, generating an in-memory level-db as `key = sha3(value)` for element in parentNode array. It puts them in this mini state trie, and inits the root. then it can run its EVM implementation directly on this trie as usual. at the end it checks its new root to verify legitimacy. If the evm tries to traverse any data that doesnt exist (even null data must have proof of null), it should return as invalid.
 
 We are also finding it useful to relay ethereum to itself. It sounds weird, but you can later make proofs about any historical information and information not usually available to the EVM can be made available as needed from the relay contract.
+
+
+-------
+At time of this writing Infura doesn't support `eth_getProof`, but it should in the very near future.
+
+Try this one liner from the console to see if it's working yet.
+```
+curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getProof","params":["0x9cc9bf39a84998089050a90087e597c26758685d",["","d471a47ea0f50e55ea9fc248daa217279ed7ea3bb54c9c503788b85e674a93d1"],"latest"],"id":1}' -H "Content-type:application/json" https://mainnet.infura.io | jq
+```
+I'm getting `{"jsonrpc": "2.0","id": 1,"error": {"code": -32601,"message": "The method eth_getProof does not exist/is not available"}}`. Geth and Parity support it so you can always run a node locally and point to localhost instead.

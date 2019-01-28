@@ -1,5 +1,5 @@
 const Trie = require('merkle-patricia-tree')
-const Util = require('ethereumjs-util')
+const U = require('ethereumjs-util')
 
 // const Keccak_256 = require('js-sha3').keccak_256
 // const rlp = require('rlp');
@@ -10,7 +10,7 @@ const Util = require('ethereumjs-util')
 class VerifyProof{
 
   static header(header, blockHash){
-    if(Util.keccak256(header).equals(blockHash)){
+    if(U.keccak(header).equals(blockHash)){
       return true
     }else{
       throw new Error("invalid header/blockhash")
@@ -18,18 +18,21 @@ class VerifyProof{
   }
 
   static account(address, account, branch, header, blockHash){
-    let stateRoot = Util.rlp.decode(header)[3]
-    let hashedAddress = Util.keccak256(address)
+    let stateRoot = U.rlp.decode(header)[3]
 
     VerifyProof.header(header, blockHash)
     try{
-      VerifyProof.trieValue(hashedAddress, account, branch, stateRoot)
+      VerifyProof.trieValue(U.keccak(address), account, branch, stateRoot)
     }catch(e){
-      let _ = Buffer.from('','hex')// empty buffer
-      let nullAccount = Util.rlp.encode([_, _, Util.KECCAK256_RLP, Util.KECCAK256_NULL])
+      let _ = Buffer.from([])
+      let nullAccount = U.rlp.encode([_, _, U.KECCAK256_RLP, U.KECCAK256_NULL])
       if(e.message == 'Error: Unexpected end of proof' && account.equals(nullAccount)){
         return true //proof of absence 
-      }else{ 
+      }else if(e.message == 'Error: Key does not match with the proof one (extention|leaf)'
+        && account.equals(nullAccount)){
+        return true //proof of absence // but why?
+      }
+      else{ 
         throw e
       }
     }
@@ -37,7 +40,7 @@ class VerifyProof{
   }
 
   static transaction(rlpTxIndex, tx, branch, header, blockHash) {
-    let txRoot = Util.rlp.decode(header)[4]
+    let txRoot = U.rlp.decode(header)[4]
 
     VerifyProof.header(header, blockHash)
     VerifyProof.trieValue(rlpTxIndex, tx, branch, txRoot)
@@ -45,28 +48,46 @@ class VerifyProof{
   }
 
   static receipt(rlpTxIndex, receipt, branch, header, blockHash) {
-    let receiptsRoot = Util.rlp.decode(header)[5]
+    let receiptsRoot = U.rlp.decode(header)[5]
 
     VerifyProof.header(header, blockHash)
     VerifyProof.trieValue(rlpTxIndex, receipt, branch, receiptsRoot)
     return true
   }
 
-  // //getting the storage index: 
-  // //https://github.com/ethereum/wiki/wiki/JSON-RPC#example-14
-  // //its unclear if zero is implemented as <>, <00>, or <80>
-  // //untested!
-  // static storage(storagePath, storageValue, storageBranch, address, account, branch, header, blockHash){
-  //   let storageHash = Util.rlp.decode(account)[2] //STORAGEROOTINDEX = 2
-  //   let accountVer = VerifyProof.account(address, account, branch, header, blockHash)
-  //   let storageVer = VerifyProof.trieValue(storagePath, storageValue, storageBranch, storageHash)
-  //   return accountVer && storageVer
-  // }
+  //getting the storage index: 
+  //https://github.com/ethereum/wiki/wiki/JSON-RPC#example-14
+  //its unclear if zero is implemented as <>, <00>, or <80>
+  //turns out 0 is implemented as <290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563>
+  //because this is the hash of 32 bytes of zeros. ahh this seems to be part of EVM design 
+  //for same reason as addresses -> to prevent tree easy tree degeneration
+  static storage(storageAddress, storageValue, storageBranch, address, account, branch, header, blockHash){
+    // console.log("storageAddress, storageValue, storageBranch,", storageAddress, storageValue, storageBranch)
+    let storageHash = U.rlp.decode(account)[2] //STORAGEHASH is index 2
+
+    VerifyProof.account(address, account, branch, header, blockHash)
+    try{
+      VerifyProof.trieValue(U.keccak(storageAddress), U.rlp.encode(storageValue), storageBranch, storageHash)
+    }catch(e){
+      let NULL_BYTES= Buffer.from([])
+      if(e.message == 'Error: Unexpected end of proof' && storageValue.equals(NULL_BYTES)){
+        return true //proof of absence 
+      }else if(e.message == 'Error: Key does not match with the proof one (extention|leaf)'
+        && storageValue.equals(NULL_BYTES)){
+        return true //proof of absence //but why?
+      }
+      else{ 
+        throw e
+      }
+    }
+
+    return true
+  }
 
   // //todo: functions for verifying solidity?
   // static byteCode(address, byteCode, account, branch, header, blockHash){
   //   let accountVer = VerifyProof.account(address, account, branch, header, blockHash)
-  //   if(Util.keccak256(byteCode).equals(Util.rlp.decode(account)[3])){
+  //   if(U.keccak(byteCode).equals(U.rlp.decode(account)[3])){
   //     return true
   //   }else{
   //     throw new Error("invalid bytecode or proof given")
@@ -74,10 +95,10 @@ class VerifyProof{
   // }
 
   static log(rlpLogIndex, log, rlpTxIndex, receipt, branch, header, blockHash){
-    let logIndex = Util.bufferToInt(Util.rlp.decode(rlpLogIndex))
+    let logIndex = U.bufferToInt(U.rlp.decode(rlpLogIndex))
     let receiptVer = VerifyProof.receipt(rlpTxIndex, receipt, branch, header, blockHash)
 
-    if(Util.rlp.encode(Util.rlp.decode(receipt)[3][logIndex]).equals(log)){ 
+    if(U.rlp.encode(U.rlp.decode(receipt)[3][logIndex]).equals(log)){ 
       return true
     }else{
       throw new Error("Mismatched log for receipt given")
@@ -85,16 +106,12 @@ class VerifyProof{
   }
 
   static trieValue(path, value, branch, root){
-    // console.log("zzzz","path",path.toString("hex"), "value",value.toString("hex"), "branch",Util.rlp.decode(branch), "root", root.toString("hex"))
-    // console.log("last branch",Util.rlp.decode(branch)[Util.rlp.decode(branch).length-1][1].toString("hex"))
-    // console.log("branch0",Util.rlp.decode(Util.rlp.decode(branch)[0]))
-    // console.log("all", path, value, branch, root)
-    // console.log("branch2",branch)
+    // console.log("here", path, value, branch, root)
     let complete, error, response = false
     let encodedBranch = []
-    let branchArr = Util.rlp.decode(branch)
+    let branchArr = U.rlp.decode(branch)
     for (let i = 0; i < branchArr.length; i++) {
-      encodedBranch.push('0x' + Util.rlp.encode(branchArr[i]).toString('hex'))
+      encodedBranch.push('0x' + U.rlp.encode(branchArr[i]).toString('hex'))
     }
 
     Trie.verifyProof('0x'+root.toString('hex'), path, encodedBranch, (e,r)=>{

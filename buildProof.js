@@ -1,79 +1,112 @@
 const Trie = require('merkle-patricia-tree')
 const Web3 = require('web3')
-const Rlp = require('rlp')
-const EthereumTx = require('ethereumjs-tx')
-const EthereumBlock = require('ethereumjs-block/from-rpc')
+const Rpc  = require('./iso-rpc')
+
+const Transaction    = require('ethereumjs-tx')
+const Account    = require('ethereumjs-account')
+const Block = require('ethereumjs-block/from-rpc')
+
+
+const U = require('ethereumjs-util')
+
 // const sha3 = require('js-sha3').keccak_256
 // const async = require('async')
-// console.log('EthereumTx', EthereumTx)
+// console.log('Transaction', Transaction)
 // const levelup = require('levelup')
-
-const BN = require('bn.js')
+// const BN = require('bn.js')
 
 const {promisfy, _} = require('promisfy')
 
 
 class BuildProof{
-  constructor(web3Provider = "http://localhost:8545"){
-    this.web3 = new Web3(web3Provider)
+  constructor(rpcProvider = "http://localhost:8545"){
+    this.web3 = new Web3(rpcProvider)
+    this.rpc = new Rpc(rpcProvider)
   }
 
-  async getProof(address, storageSlots = [], blockNumberOrHash = "latest"){
-    let blockResponse = await this.web3.eth.getBlock(blockNumberOrHash)
+  async _getProof(address, storageAddresses = [], blockNumberOrHash = "latest"){
+    // let blockFromRpc = await this.web3.eth.getBlock(blockNumberOrHash)
+    let blockFromRpc = await this.rpc.eth_getBlockByNumber(blockNumberOrHash, false)
+    // storageAddresses = storageAddresses.map((storageAddress)=>{
+    //   return U.bufferToHex(BuildProof.toWord(storageAddress))
+    // })
 
-    let prfResponse = await promisfy(
-      this.web3.currentProvider.send,
-      this.web3.currentProvider
-    )({
-      jsonrpc: "2.0",
-      method: "eth_getProof",
-      params: [address, storageSlots, "0x" + blockResponse.number.toString(16)],
-      id: 0
-    })
-    if(prfResponse.error){ throw new Error(prfResponse.error.message) }
-    let output = {}
+// console.log("----->\n",[address, storageAddresses, blockFromRpc.number])
+    // let prfResponse = await promisfy(
+    //   this.web3.currentProvider.send,
+    //   this.web3.currentProvider
+    // )({
+    //   jsonrpc: "2.0",
+    //   method: "eth_getProof",
+    //   // params: [address, storageAddresses, "0x" + blockFromRpc.number.toString(16)],
+    //   params: [address, storageAddresses, blockFromRpc.number],
+    //   id: 0
+    // })
+    let merkleProofFromRpc = await this.rpc.eth_getProof(address, storageAddresses, blockFromRpc.number)
+    
+    merkleProofFromRpc.block = blockFromRpc
 
-    output.block = blockResponse
-    for (var i = 0; i < Object.keys(prfResponse.result).length; i++) {
-      output[Object.keys(prfResponse.result)[i]] = prfResponse.result[Object.keys(prfResponse.result)[i]]
-    }
-    output.addressBytes = BuildProof._strToBuf(output.address)
-    output.accountBytes = Rlp.encode([
-      BuildProof._strToBuf(output.nonce),
-      BuildProof._strToBuf(output.balance),
-      BuildProof._strToBuf(output.storageHash),
-      BuildProof._strToBuf(output.codeHash)
-    ])
-    output.branchBytes = BuildProof._getAccountNodesBytes(prfResponse.result.accountProof)
-    output.headerBytes = BuildProof._getHeaderBytes(blockResponse)
-    output.blockHashBytes = BuildProof._strToBuf(blockResponse.hash)
+    BuildProof.sanitizeResponse(
+      merkleProofFromRpc,
+      address,
+      storageAddresses,
+      blockNumberOrHash
+    )
+
+    // if(prfResponse.error){ throw new Error(prfResponse.error.message) }
+    // let output = {}
+// console.log("prf.result----->\n",prfResponse)
+
+    // for (var i = 0; i < Object.keys(merkleProofFromRpc).length; i++) {
+    //   output[Object.keys(merkleProofFromRpc)[i]] = merkleProofFromRpc[Object.keys(merkleProofFromRpc)[i]]
+    // }
+
+    // output.address = BuildProof._strToBuf(output.address)
+    // output.account =     new Account(output)
+    // console.log()
+    // output.accountBytes = U.rlp.encode([
+    //   BuildProof._strToBuf(output.nonce),
+    //   BuildProof._strToBuf(output.balance),
+    //   BuildProof._strToBuf(output.storageHash),
+    //   BuildProof._strToBuf(output.codeHash)
+    // ])
+    // output.accountBranch = BuildProof._getBranchBytes(merkleProofFromRpc.accountProof)
+    // output.headerBytes = BuildProof._getHeaderBytes(blockFromRpc)
+    output.blockHashBytes = BuildProof._strToBuf(blockFromRpc.hash)
+
+
+    // output.storageAddressBytes = U.toBuffer(merkleProofFromRpc.storageProof[0].key)
+    // output.storageValueBytes = U.toBuffer(merkleProofFromRpc.storageProof[0].value)
+    // output.storageBranchBytes = BuildProof._getBranchBytes(merkleProofFromRpc.storageProof[0].proof)
 
     return output
   }
 
   async getAccountProof(address, blockNumberOrHash = "latest"){
-    return await this.getProof(address, [], blockNumberOrHash)
+    return await this.getStorageProof(address, [], blockNumberOrHash)
   }
-  // not yet tested for multi-dimentional mappings
-  async getStorageProof(address, storageSlots = [], blockNumberOrHash = "latest"){
-    return  await this.getProof(address, storageSlots, blockNumberOrHash)
+  // todo: test multi-dimensional mappings
+  async getStorageProof(address, storageAddresses = [], blockNumberOrHash = "latest"){
+    if(!Array.isArray(storageAddresses)){ storageAddresses = [storageAddresses] }
+    // storageAddresses = storageAddresses.map((storageSlot)=>{ return storageSlot.toString(16) })
+    return await this._getProof(address, storageAddresses, blockNumberOrHash)
   }
 
   async getTransactionProof(txHash){
     var transaction = await promisfy(this.web3.eth.getTransaction)(txHash)
-    if(!transaction){ throw new Error("transaction not found")}
+    if(!transaction){ throw new Error("Tx not found. Use archive node")}
 
     var block = await promisfy(this.web3.eth.getBlock)(transaction.blockHash, true)
 
     var trie = new Trie();
 
     await Promise.all(block.transactions.map((siblingTx) => {
-      var path = Rlp.encode(siblingTx.transactionIndex)
+      var path = U.rlp.encode(siblingTx.transactionIndex)
       var rawSignedSiblingTx = BuildProof._serializeTx(siblingTx)
       return promisfy(trie.put, trie)(path, rawSignedSiblingTx) 
     }))
 
-    let path = Rlp.encode(transaction.transactionIndex)
+    let path = U.rlp.encode(transaction.transactionIndex)
 
     var [rawTxNode,_,stack] = await promisfy(trie.findPath, trie)(path)
 
@@ -81,16 +114,17 @@ class BuildProof{
       blockHash: BuildProof._strToBuf(transaction.blockHash),
       header:    BuildProof._getHeaderBytes(block),
       branch: BuildProof._rawStack(stack),
-      path: Rlp.encode(transaction.transactionIndex),
+      path: U.rlp.encode(transaction.transactionIndex),
       value: rawTxNode.value
     }
   }
 
   async getReceiptProof(txHash){ //WIP
     var receipt = await promisfy(this.web3.eth.getTransactionReceipt)(txHash)
-    if(!receipt){ throw new Error("txhash/receipt not found")}
+    if(!receipt){ throw new Error("txhash/receipt not found. (use Archive node)")}
     
     var block = await promisfy(this.web3.eth.getBlock)(receipt.blockHash, false)
+  // console.log("BLOCK: ",block)
 
     var trie = new Trie();
 
@@ -99,17 +133,17 @@ class BuildProof{
     }))
 
     await Promise.all(receipts.map((siblingReceipt, index) => {
-      var path = Rlp.encode(index)
+      var path = U.rlp.encode(index)
       var rawReceipt = BuildProof._serializeReceipt(siblingReceipt)
 
       return promisfy(trie.put, trie)(path, rawReceipt)
     }))
 
-    let path = Rlp.encode(receipt.transactionIndex)
+    let path = U.rlp.encode(receipt.transactionIndex)
     var [rawReceiptNode,_,stack] = await promisfy(trie.findPath, trie)(path)
 
     return {
-      path:      Rlp.encode(receipt.transactionIndex),
+      path:      U.rlp.encode(receipt.transactionIndex),
       value:     rawReceiptNode.value,
       branch:     BuildProof._rawStack(stack),
       header:    BuildProof._getHeaderBytes(block),
@@ -121,8 +155,8 @@ class BuildProof{
     let receiptProof = await this.getReceiptProof(txHash)
 
     return {
-      rlpLogIndex: Rlp.encode(logIndex),
-      value: Rlp.encode(Rlp.decode(receiptProof.value)[3][logIndex]),
+      rlpLogIndex: U.rlp.encode(logIndex),
+      value: U.rlp.encode(U.rlp.decode(receiptProof.value)[3][logIndex]),
       rlpTxIndex: receiptProof.path,
       receipt: receiptProof.value,
       branch: receiptProof.branch,
@@ -130,6 +164,27 @@ class BuildProof{
       blockHash: receiptProof.blockHash,
     }
   }
+
+  static mappingAt(...keys){ // first key is mapping's position
+    keys[0] = BuildProof.toWord(keys[0])
+    return keys.reduce((positionAccumulator, key)=>{
+      return U.keccak(Buffer.concat([BuildProof.toWord(key) ,positionAccumulator]))
+    })
+  }
+
+  static toWord(input){
+    return U.setLengthLeft(U.toBuffer(U.addHexPrefix(input)), 32)
+  }
+    // if(_mappingKeys.length > 0){
+    //   for(var i = 0 ; i < _mappingKeys.length ; i++){
+    //     bufMappings.push(Buffer.from(leftPad(_mappingKeys[i]),'hex'))
+    //     pathBuilder = Buffer.concat([bufMappings[i], pathBuilder])
+    //   }
+    //   pathBuilder = Buffer.from(sha3(pathBuilder),'hex')
+    // }
+
+    // var storagePath = Buffer.from(sha3(pathBuilder),'hex') //not going this far cause RPC doesnt expect it
+
 //private methods
   static _serializeReceipt(receipt){
     var cummulativeGas = BuildProof._numToBuf(receipt.cumulativeGasUsed)
@@ -144,13 +199,13 @@ class BuildProof{
         || receipt.status == true
         || receipt.status == "true"
       ){
-        var rawReceipt = Rlp.encode([1,cummulativeGas,bloomFilter,setOfLogs])
+        var rawReceipt = U.rlp.encode([1,cummulativeGas,bloomFilter,setOfLogs])
       } else {
-        var rawReceipt = Rlp.encode([0,cummulativeGas,bloomFilter,setOfLogs])
+        var rawReceipt = U.rlp.encode([0,cummulativeGas,bloomFilter,setOfLogs])
       }
     }else{
       var postTransactionState = BuildProof._strToBuf(receipt.root)
-      var rawReceipt = Rlp.encode([postTransactionState,cummulativeGas,bloomFilter,setOfLogs])
+      var rawReceipt = U.rlp.encode([postTransactionState,cummulativeGas,bloomFilter,setOfLogs])
     }
     return rawReceipt
 
@@ -170,26 +225,38 @@ class BuildProof{
     for (var i = 0; i < input.length; i++) {
       output.push(input[i].raw)
     }
-    return Rlp.encode(output)
+    return U.rlp.encode(output)
   }
   static _getHeaderBytes(_block) {
-    _block.difficulty = '0x' + parseInt(_block.difficulty).toString(16)
-    var block = new EthereumBlock(_block)
-    return Rlp.encode(block.header.raw)
-  }
-  static _getAccountNodesBytes(accountNodes){
-    let rawAccountNodes = []
-    for (var i = 0; i < accountNodes.length; i++) {
-      rawAccountNodes.push(Rlp.decode(BuildProof._strToBuf(accountNodes[i])))
+    if(typeof _block.difficulty == "string" && _block.difficulty.slice(0,2) != "0x"){
+      _block.difficulty = '0x' + new U.BN(_block.difficulty).toString(16)
     }
-    return Rlp.encode(rawAccountNodes)
+    var block = new Block(_block)
+    return U.rlp.encode(block.header.raw)
+  }
+  static _getBranchBytes(branchNodes){
+    let rawbranchNodes = []
+    for (var i = 0; i < branchNodes.length; i++) {
+      rawbranchNodes.push(U.rlp.decode(BuildProof._strToBuf(branchNodes[i])))
+    }
+    return U.rlp.encode(rawbranchNodes)
+  }
+
+  static _getStorageAddressBytes(storageProof){
+    return storageProof.key
+  }
+  static _getStorageValueBytes(storageProof){
+    return 
+  }
+  static _getStorageBranchBytes(storageProof){
+    return 
   }
 
   static _serializeTx(r){
     let rpcTx = r
-    rpcTx.gasPrice = '0x' + new BN(rpcTx.gasPrice).toString(16)
-    rpcTx.value = '0x' + new BN(rpcTx.value).toString(16)
-    let tx = new EthereumTx(rpcTx).serialize()
+    rpcTx.gasPrice = U.addHexPrefix(new U.BN(rpcTx.gasPrice).toString(16))
+    rpcTx.value = U.addHexPrefix(new U.BN(rpcTx.value).toString(16))
+    let tx = new Transaction(rpcTx).serialize()
     return tx
   }
   static _strToBuf(input){
@@ -211,6 +278,25 @@ class BuildProof{
     }
   }
 
+  static sanitizeResponse(merkleProofFromRpc, address, storageAddresses, blockNumberOrHash){
+    // make sure the response corresponds to the data they requested
+    assert(merkleProofFromRpc.address == address)
+    assert(merkleProofFromRpc.block.hash == blockNumberOrHash
+      || merkleProofFromRpc.block.number == blockNumberOrHash
+      || blockNumberOrHash == 'latest'
+      || blockNumberOrHash == 'earliest'
+      || blockNumberOrHash == 'pending')
+    
+    for (var i = 0; i < storageAddresses.length; i++) {
+      assert(merkleProofFromRpc.storageProof[i].key == U.keccak(storageAddresses[i]))
+      merkleProofFromRpc.storageProof[i].key = BuildProof.toWord(merkleProofFromRpc.storageProof[i].key)
+    }
+  }
 }
 
 module.exports = BuildProof
+
+// flock team: agaron 1
+// aragon 1 blog
+// aragon forum
+

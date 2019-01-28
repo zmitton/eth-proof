@@ -108,7 +108,7 @@ describe('getReceiptProof', () => {
     VerifyProof.receipt(prf.path, prf.value, prf.branch, prf.header, prf.blockHash).should.be.true()
   });
 
-  it('invalid tx hash should throw error', async () => {
+  it('requesting invalid tx hash should throw error', async () => {
     await buildProof.getReceiptProof('0x4914025aa9ea9f274b174205adde3243eec74589bef9a0e78a433763b2f8caa3').should.be.rejectedWith(Error)
     await buildProof.getReceiptProof('0x1234').should.be.rejectedWith(Error)
   });
