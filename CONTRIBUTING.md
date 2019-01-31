@@ -2,7 +2,11 @@
 
 > This document is inspired by [elasticsearch/CONTRIBUTING.md](https://github.com/elastic/elasticsearch/blob/master/CONTRIBUTING.md)
 
-There are many ways to contribute, from writing tutorials or blog posts, improving the documentation, [submitting github issues](https://help.github.com/articles/creating-an-issue/), bug reports, feature requests and writing code.
+Adding a `CONTRIBUTING.md` to a Github repository enables a link to that file in the pull request or create an issue page. This document should guide potential contributors toward making a successful and meaningful impact on the project, and can save maintainers time and hassle caused by improper pull requests and issues. You can learn more about the features that are enabled by Github when this file is present [here](https://help.github.com/articles/setting-guidelines-for-repository-contributors/).
+
+## How to contribute
+
+There are many ways to contribute, from writing tutorials or blog posts, improving the documentation, [submitting Github issues](https://help.github.com/articles/creating-an-issue/), bug reports, feature requests and writing code.
 
 ## License
 
@@ -10,7 +14,7 @@ This repository uses the [The Apache License, Version 2.0](https://www.apache.or
 
 ## Bug reports
 
-If you think you've found a bug in the software, first make sure you're testing against the *latest* version of the software -- your issue may have been fixed already. If it's not, please check out the issues list on github and search for similar issues that have already been opened. If there are no issues then please [submit a github issue](https://help.github.com/articles/creating-an-issue/).
+If you think you've found a bug in the software, first make sure you're testing against the *latest* version of the software -- your issue may have been fixed already. If it's not, please check out the issues list on Github and search for similar issues that have already been opened. If there are no issues then please [submit a Github issue](https://help.github.com/articles/creating-an-issue/).
 
 If you can provide a small test case it would greatly help the reproduction of a bug, as well as a a screenshot, and any other information you can provide.
 
@@ -29,15 +33,15 @@ There are many ways to fix a problem and it is important to find the best approa
 
 For small documentation changes and fixes, these can be done quickly following this video guide on [how to contribute to Open Source in 1 minute on Github](https://www.youtube.com/watch?v=kRYk1-yKwWs).
 
-### Cloning (or forking) the repository
+### Forking the repository
 
-First off, you are going to need your own copy of the repository. You can find help on how to fork a repo [here](https://help.github.com/articles/fork-a-repo/).
+[How to fork a repository](https://help.github.com/articles/fork-a-repo/).
 
-### Submitting your changes
+### Submitting changes
 
-1. Review & Test your changes
+1. Review & Test changes
 
-If it's code: make sure you test it. If it's documentation: make sure you view it in a Markdown viewer or the like.
+If the code changed, then test it. If documentation changed, then preview the rendered Markdown.
 
 2. Commiting
 
@@ -51,7 +55,7 @@ Make sure you've signed the repository's Contributor License Agreement. We are n
  
 4. Submit a pull request
 
-Push your local changes to you forked repository and make a pull request. Follow the [Convention Commits](CONVENTIONAL_COMMITS.md) guidelines for naming Github pull requests and what to put in the body.
+Push local changes to your forked repository and make a pull request. Follow the [Convention Commits](CONVENTIONAL_COMMITS.md) guidelines for naming Github pull requests and what to put in the body.
 
 
 ## Building
