@@ -1,7 +1,8 @@
 const fetch = require('isomorphic-fetch')
 
-class IsoRpc{
+class IsoRpc extends Array{
   constructor(provider = "http://localhost:8545", fetchOptions = {}){
+    super(0)
     this.provider = provider
   }
   static get(obj,prop){

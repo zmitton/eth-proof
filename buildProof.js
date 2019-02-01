@@ -24,7 +24,7 @@ class BuildProof{
     this.rpc = new Rpc(rpcProvider)
   }
 
-  async _getProof(address, storageAddresses = [], blockNumberOrHash = "latest"){
+  async getProof(address, storageAddresses = [], blockNumberOrHash = "latest"){
     // let blockFromRpc = await this.web3.eth.getBlock(blockNumberOrHash)
     let blockFromRpc = await this.rpc.eth_getBlockByNumber(blockNumberOrHash, false)
     // storageAddresses = storageAddresses.map((storageAddress)=>{
@@ -89,7 +89,7 @@ class BuildProof{
   async getStorageProof(address, storageAddresses = [], blockNumberOrHash = "latest"){
     if(!Array.isArray(storageAddresses)){ storageAddresses = [storageAddresses] }
     // storageAddresses = storageAddresses.map((storageSlot)=>{ return storageSlot.toString(16) })
-    return await this._getProof(address, storageAddresses, blockNumberOrHash)
+    return await this.getProof(address, storageAddresses, blockNumberOrHash)
   }
 
   async getTransactionProof(txHash){
@@ -153,7 +153,6 @@ class BuildProof{
 
   async getLogProof(txHash, logIndex){
     let receiptProof = await this.getReceiptProof(txHash)
-
     return {
       rlpLogIndex: U.rlp.encode(logIndex),
       value: U.rlp.encode(U.rlp.decode(receiptProof.value)[3][logIndex]),
@@ -280,15 +279,15 @@ class BuildProof{
 
   static sanitizeResponse(merkleProofFromRpc, address, storageAddresses, blockNumberOrHash){
     // make sure the response corresponds to the data they requested
-    assert(merkleProofFromRpc.address == address)
-    assert(merkleProofFromRpc.block.hash == blockNumberOrHash
+    console.assert(merkleProofFromRpc.address == address)
+    console.assert(merkleProofFromRpc.block.hash == blockNumberOrHash
       || merkleProofFromRpc.block.number == blockNumberOrHash
       || blockNumberOrHash == 'latest'
       || blockNumberOrHash == 'earliest'
       || blockNumberOrHash == 'pending')
     
     for (var i = 0; i < storageAddresses.length; i++) {
-      assert(merkleProofFromRpc.storageProof[i].key == U.keccak(storageAddresses[i]))
+      console.assert(merkleProofFromRpc.storageProof[i].key == U.keccak(storageAddresses[i]))
       merkleProofFromRpc.storageProof[i].key = BuildProof.toWord(merkleProofFromRpc.storageProof[i].key)
     }
   }

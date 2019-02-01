@@ -1,33 +1,53 @@
 const U = require('ethereumjs-util')
 
-class BlockHeader{
-  constructor(rpcResult){
-    this.parentHash = rpcResult.parentHash
-    this.sha3Uncles = rpcResult.sha3Uncles
-    this.miner = rpcResult.miner
-    this.stateRoot = rpcResult.stateRoot
-    this.transactionsRoot = rpcResult.transactionsRoot
-    // this.receiptsRoot = rpcResult.receiptsRoot
-    this.receiptsRoot = rpcResult.receiptRoot || rpcResult.receiptsRoot || U.SHA3_NULL
-    this.logsBloom = rpcResult.logsBloom
-    this.difficulty = rpcResult.difficulty
-    this.number = rpcResult.number
-    this.gasLimit = rpcResult.gasLimit
-    this.gasUsed = rpcResult.gasUsed
-    this.timestamp = rpcResult.timestamp
-    this.extraData = rpcResult.extraData
-    this.mixHash = rpcResult.mixHash
-    this.nonce = rpcResult.nonce
-  }
-  raw(){
+class EthObj{
+  static raw(){
     let self = this
-    return Object.keys(self).map(function (key) {
+    return Object.keys(self).map((key)=>{
       return U.toBuffer(self[key])
     })
   }
-  hash(){
-    U.keccak(U.rlp.encode(this.raw())).toString('hex')
+}
+
+class BlockHeader extends Array{
+  constructor(decoded){ super(decoded) }
+  fromRaw(decoded){ return new Blockheader(decoded) }
+  fromRpc(rpcResult = {}){
+    let raw = Blockheader.fields.map((field)=>{ return field })
+    return Blockheader.fromRaw(raw)
   }
+
+
+
+    return new Blockheader([
+      rpcResult.parentHash,
+      rpcResult.sha3Uncles || U.KECCAK256_RLP_ARRAY,
+      rpcResult.miner,
+      rpcResult.stateRoot || U.SHA3_NULL,
+      rpcResult.transactionsRoot || U.SHA3_NULL,
+      rpcResult.receiptRoot || rpcResult.receiptsRoot || U.SHA3_NULL,
+      rpcResult.logsBloom,
+      rpcResult.difficulty,
+      rpcResult.number,
+      rpcResult.gasLimit,
+      rpcResult.gasUsed,
+      rpcResult.timestamp,
+      rpcResult.extraData,
+      rpcResult.mixHash,
+      rpcResult.nonce,
+    ])
+  }
+
+  fromSerialized(encoded){ }
+
+  hash(){
+    return U.keccak(U.rlp.encode(this.raw())).toString('hex') //untested
+  }
+
+  get NULL(){
+    return new BlockHeader()
+  }
+
 }
 
 module.exports = BlockHeader

@@ -106,7 +106,8 @@ class VerifyProof{
   }
 
   static trieValue(path, value, branch, root){
-    // console.log("here", path, value, branch, root)
+    console.log("here", path, value, U.rlp.decode(branch), root)
+    console.log("ROOOT", U.keccak(U.rlp.encode(U.rlp.decode(branch)[0])), root)
     let complete, error, response = false
     let encodedBranch = []
     let branchArr = U.rlp.decode(branch)
@@ -119,6 +120,15 @@ class VerifyProof{
       response = r
       complete = true
     })
+    // let encodedBranch = branch.map((node)=>{
+    //   return bufToHex(encode(node))
+    // })
+
+    // Trie.verifyProof(keccak(branch[0]), toBuf(path), encodedBranch, (e,r)=>{
+    //   error = e
+    //   response = r
+    //   complete = true
+    // })
 
     while(!complete){/*wait*/}
 
