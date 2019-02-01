@@ -106,7 +106,10 @@ class VerifyProof{
   }
 
   static trieValue(path, value, branch, root){
-    console.log("here", path, value, U.rlp.decode(branch), root)
+    console.log("PATH", path)
+    console.log("PROOF ", U.rlp.decode(branch))
+    console.log("VALUE ", U.rlp.decode(value))
+    console.log("BLOOM ", U.rlp.decode(value)[2].toString('hex'))
     console.log("ROOOT", U.keccak(U.rlp.encode(U.rlp.decode(branch)[0])), root)
     let complete, error, response = false
     let encodedBranch = []
