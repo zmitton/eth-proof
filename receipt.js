@@ -1,4 +1,4 @@
-const [keccak, encode, decode, toBuffer, toHex] = require('./ethUtils')
+const { keccak, encode, decode, toBuffer, toHex } = require('./ethUtils')
 const Log = require('./log')
 
 class Receipt extends Array{
@@ -49,7 +49,6 @@ class Receipt extends Array{
       }else if(this[i] instanceof Array){
         let rawLogs = []
         for (var j = 0; j < this[i].length; j++) {
-          console.log("hhhhh", this[i][j])
           rawLogs.push(this[i][j].raw())
         }
         output.push(rawLogs)
