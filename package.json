@@ -13,6 +13,7 @@
     "ethereumjs-util": "^6.0.0",
     "iso-http": "0.0.5",
     "isomorphic-fetch": "^2.2.1",
+    "isomorphic-rpc": "^1.0.1",
     "js-sha3": "^0.8.0",
     "keccak": "^1.4.0",
     "leveldown": "^1.9.0",

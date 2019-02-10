@@ -1,5 +1,6 @@
 const Trie = require('merkle-patricia-tree')
 const U = require('ethereumjs-util')
+const [keccak, encode, decode, toBuffer, toHex] = require('./ethUtils')
 
 // const Keccak_256 = require('js-sha3').keccak_256
 // const rlp = require('rlp');
@@ -10,6 +11,7 @@ const U = require('ethereumjs-util')
 class VerifyProof{
 
   static header(header, blockHash){
+    // console.log("things" , decode(header), blockHash)
     if(U.keccak(header).equals(blockHash)){
       return true
     }else{
@@ -106,32 +108,25 @@ class VerifyProof{
   }
 
   static trieValue(path, value, branch, root){
-    console.log("PATH", path)
-    console.log("PROOF ", U.rlp.decode(branch))
-    console.log("VALUE ", U.rlp.decode(value))
-    console.log("BLOOM ", U.rlp.decode(value)[2].toString('hex'))
-    console.log("ROOOT", U.keccak(U.rlp.encode(U.rlp.decode(branch)[0])), root)
+    // console.log("PATH", path)
+    // console.log("PROOF ", U.rlp.decode(branch))
+    // console.log("VALUE ", U.rlp.decode(value))
+    // console.log("ROOOT", U.keccak(U.rlp.encode(U.rlp.decode(branch)[0])), root)
+    // console.log("BLOOM ", U.rlp.decode(value)[2].toString('hex'))
     let complete, error, response = false
     let encodedBranch = []
-    let branchArr = U.rlp.decode(branch)
+    let branchArr = branch
     for (let i = 0; i < branchArr.length; i++) {
       encodedBranch.push('0x' + U.rlp.encode(branchArr[i]).toString('hex'))
     }
+    // console.log("ENCODED BRANCH",  encodedBranch)
 
     Trie.verifyProof('0x'+root.toString('hex'), path, encodedBranch, (e,r)=>{
       error = e
       response = r
       complete = true
     })
-    // let encodedBranch = branch.map((node)=>{
-    //   return bufToHex(encode(node))
-    // })
 
-    // Trie.verifyProof(keccak(branch[0]), toBuf(path), encodedBranch, (e,r)=>{
-    //   error = e
-    //   response = r
-    //   complete = true
-    // })
 
     while(!complete){/*wait*/}
 

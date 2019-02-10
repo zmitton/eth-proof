@@ -1,9 +1,9 @@
 const fetch = require('isomorphic-fetch')
 
-class IsoRpc extends Array{
+class IsoRpc{
   constructor(provider = "http://localhost:8545", fetchOptions = {}){
-    super(0)
     this.provider = provider
+    this.id = 1
   }
   static get(obj,prop){
     if(prop in obj){
@@ -13,6 +13,7 @@ class IsoRpc extends Array{
         let connection = await fetch(obj.provider, Object.assign({
           method: "POST",
           headers: {"Content-Type": "application/json"},
+          credentials: 'include',
           body: JSON.stringify({
             method:prop,
             params:params,
@@ -22,8 +23,9 @@ class IsoRpc extends Array{
 
         let response = await connection.json()
 
+
         if (response.error) {
-          throw new Error(response.error.message)
+          throw new Error(response.error.message + prop + params)
         }else{
           return response.result
         }

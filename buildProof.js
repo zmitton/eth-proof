@@ -1,154 +1,258 @@
 const Trie = require('merkle-patricia-tree')
-const Web3 = require('web3')
 const Rpc  = require('./iso-rpc')
 
 const Transaction    = require('ethereumjs-tx')
-const Account    = require('ethereumjs-account')
+const Account    = require('./account')
 const Block = require('ethereumjs-block/from-rpc')
-
+const Branch = require('./branch')
+const Header = require('./header')
+const Verify = require('./verify')
+const Receipt = require('./receipt')
 
 const U = require('ethereumjs-util')
+const [keccak, encode, decode, toBuffer, toHex] = require('./ethUtils')
 
-// const sha3 = require('js-sha3').keccak_256
-// const async = require('async')
-// console.log('Transaction', Transaction)
-// const levelup = require('levelup')
-// const BN = require('bn.js')
 
 const {promisfy, _} = require('promisfy')
 
 
 class BuildProof{
   constructor(rpcProvider = "http://localhost:8545"){
-    this.web3 = new Web3(rpcProvider)
     this.rpc = new Rpc(rpcProvider)
   }
 
-  async getProof(address, storageAddresses = [], blockNumberOrHash = "latest"){
-    // let blockFromRpc = await this.web3.eth.getBlock(blockNumberOrHash)
-    let blockFromRpc = await this.rpc.eth_getBlockByNumber(blockNumberOrHash, false)
+      // blockHash: U.toBuffer(transaction.blockHash),
+      // header:    BuildProof._getHeaderBytes(block),
+      // branch: BuildProof._rawStack(stack),
+      // // path: targetPath,
+      // // value: rawTxNode.value
+
+
+  async txAgainstTxRoot(txHash, txRoot){
+    let prf = await this.getTransactionProof(txHash)
+    Verify.rootContainsBranch(prf.branch.root(), prf.branch)
+    Verify.txsBranchContainsTxAt(prf.branch, prf.tx, prf.txIndex)
+    return prf.tx
+  }
+  async txAgainstBlockHash(txHash, blockHash){
+    let prf = await this.getTransactionProof(txHash)
+    Verify.blockhashContainsHeader(toBuffer(blockHash), prf.header)
+    Verify.headerContainsTxsRoot(prf.header, prf.branch.root())
+    Verify.rootContainsBranch(prf.branch.root(), prf.branch)
+    Verify.txsBranchContainsTxAt(prf.branch, prf.tx, prf.txIndex)
+    return prf.tx
+  }
+  //  async txAgainstWorkChain(txHash, workChain) => tx
+
+   async receiptAgainstReceiptsRoot(txHash, receiptsRoot){
+    let prf = await this.getReceiptProof(txHash)
+    Verify.rootContainsBranch(prf.branch.root(), prf.branch)
+    Verify.receiptsBranchContainsReceiptAt(prf.branch, prf.receipt, prf.txIndex)
+    return prf.receipt
+   }
+   async receiptAgainstBlockHash(txHash, blockHash){
+    let prf = await this.getReceiptProof(txHash)
+    Verify.blockhashContainsHeader(toBuffer(blockHash), prf.header)
+    Verify.headerContainsReceiptsRoot(prf.header, prf.branch.root())
+    Verify.rootContainsBranch(prf.branch.root(), prf.branch)
+    Verify.receiptsBranchContainsReceiptAt(prf.branch, prf.receipt, prf.txIndex)
+    return prf.receipt
+   }
+  //  async receiptAgainstWorkChain(txHash, workChain) => receipt
+
+  //  async accountAgainstStateRoot(accountAddress, stateRoot) => account
+  //  async accountAgainstBlockHash(accountAddress, blockHash) => account
+  //  async accountAgainstWorkChain(accountAddress, workChain) => account
+
+  //  async storageAgainstStorageRoot(accountAddress, storageAddress, storageRoot) => storage
+  //  async storageAgainstBlockHash(accountAddress, storageAddress, blockHash) => storage
+  //  async storageAgainstWorkChain(accountAddress, storageAddress, workChain) => storage
+
+
+
+
+
+
+
+
+
+
+  async getProof(address, storageAddresses, blockHash){
+    let rpcBlock, rpcProof
+    if(blockHash){//function overloading
+      rpcBlock = await this.rpc.eth_getBlockByHash(blockHash, false)
+    }else{
+      rpcBlock = await this.rpc.eth_getBlockByNumber('latest', false)
+    }
+    rpcProof = await this.rpc.eth_getProof(address, storageAddresses, rpcBlock.number)
+
+    return {
+      header: new Block(rpcBlock).header.raw,
+      accountBranch: Branch.fromRpc(rpcProof.accountProof),
+      account: Account.fromRpc(rpcProof)
+    }
+  }
+
+
+  async _getProofWithBlockHash(address, storageAddresses, blockHash){
+
+    // let header = new Block(rpcBlock).header
+    // let accountBranch = Branch.fromRpc(rpcProof.accountProof)
+    // let account = Account.fromRpc(rpcProof)
+
+
+
+    // console.log(header)
+    // console.log(decode(BuildProof._getHeaderBytes(rpcBlock)))
+    // console.log("HEREEEEEEEE", new Block(rpcBlock).header.hash())
+    // console.log("HEREEEEEEEE", rpcBlock)
     // storageAddresses = storageAddresses.map((storageAddress)=>{
     //   return U.bufferToHex(BuildProof.toWord(storageAddress))
     // })
 
-// console.log("----->\n",[address, storageAddresses, blockFromRpc.number])
+// console.log("----->\n",[address, storageAddresses, rpcBlock.number])
     // let prfResponse = await promisfy(
     //   this.web3.currentProvider.send,
     //   this.web3.currentProvider
     // )({
     //   jsonrpc: "2.0",
     //   method: "eth_getProof",
-    //   // params: [address, storageAddresses, "0x" + blockFromRpc.number.toString(16)],
-    //   params: [address, storageAddresses, blockFromRpc.number],
+    //   // params: [address, storageAddresses, "0x" + rpcBlock.number.toString(16)],
+    //   params: [address, storageAddresses, rpcBlock.number],
     //   id: 0
     // })
-    let merkleProofFromRpc = await this.rpc.eth_getProof(address, storageAddresses, blockFromRpc.number)
-    
-    merkleProofFromRpc.block = blockFromRpc
 
-    BuildProof.sanitizeResponse(
-      merkleProofFromRpc,
-      address,
-      storageAddresses,
-      blockNumberOrHash
-    )
+
+    // merkleProofFromRpc.block = rpcBlock
+
+    // BuildProof.sanitizeResponse(
+    //   merkleProofFromRpc,
+    //   address,
+    //   storageAddresses,
+    //   blockNumber
+    // )
 
     // if(prfResponse.error){ throw new Error(prfResponse.error.message) }
-    // let output = {}
 // console.log("prf.result----->\n",prfResponse)
 
     // for (var i = 0; i < Object.keys(merkleProofFromRpc).length; i++) {
     //   output[Object.keys(merkleProofFromRpc)[i]] = merkleProofFromRpc[Object.keys(merkleProofFromRpc)[i]]
     // }
 
-    // output.address = BuildProof._strToBuf(output.address)
-    // output.account =     new Account(output)
-    // console.log()
+    // output.address = U.toBuffer(output.address)
+    // console.log("AAAAAAAA", output)
+    // output.account =     Account.fromRpc(merkleProofFromRpc)
+    // console.log("BBBBBBBBB", output.account)
     // output.accountBytes = U.rlp.encode([
-    //   BuildProof._strToBuf(output.nonce),
-    //   BuildProof._strToBuf(output.balance),
-    //   BuildProof._strToBuf(output.storageHash),
-    //   BuildProof._strToBuf(output.codeHash)
+    //   U.toBuffer(output.nonce),
+    //   U.toBuffer(output.balance),
+    //   U.toBuffer(output.storageHash),
+    //   U.toBuffer(output.codeHash)
     // ])
-    // output.accountBranch = BuildProof._getBranchBytes(merkleProofFromRpc.accountProof)
-    // output.headerBytes = BuildProof._getHeaderBytes(blockFromRpc)
-    output.blockHashBytes = BuildProof._strToBuf(blockFromRpc.hash)
+    // // output.accountBranch = BuildProof._getBranchBytes(merkleProofFromRpc.accountProof)
+    // // output.headerBytes = BuildProof._getHeaderBytes(rpcBlock)
+    // output.blockHashBytes = U.toBuffer(rpcBlock.hash)
 
 
-    // output.storageAddressBytes = U.toBuffer(merkleProofFromRpc.storageProof[0].key)
-    // output.storageValueBytes = U.toBuffer(merkleProofFromRpc.storageProof[0].value)
-    // output.storageBranchBytes = BuildProof._getBranchBytes(merkleProofFromRpc.storageProof[0].proof)
+    // // output.storageAddressBytes = U.toBuffer(merkleProofFromRpc.storageProof[0].key)
+    // // output.storageValueBytes = U.toBuffer(merkleProofFromRpc.storageProof[0].value)
+    // // output.storageBranchBytes = BuildProof._getBranchBytes(merkleProofFromRpc.storageProof[0].proof)
 
-    return output
+    // return output
   }
 
-  async getAccountProof(address, blockNumberOrHash = "latest"){
-    return await this.getStorageProof(address, [], blockNumberOrHash)
+  async getAccountProof(address, blockHash){
+    return await this.getProof(address, [], blockHash)
   }
   // todo: test multi-dimensional mappings
-  async getStorageProof(address, storageAddresses = [], blockNumberOrHash = "latest"){
-    if(!Array.isArray(storageAddresses)){ storageAddresses = [storageAddresses] }
-    // storageAddresses = storageAddresses.map((storageSlot)=>{ return storageSlot.toString(16) })
-    return await this.getProof(address, storageAddresses, blockNumberOrHash)
+  async getStorageProof(address, storagePosition, blockHash){
+    return await this.getProof(address, [storagePosition], blockHash)
+  }
+  async getStorageMappingProof(address, blockHash, ...keys){//first key is position of variable
+    let key = BuildProof.mappingAt(keys)
+    return await this.getProof(address, [key], blockHash)
   }
 
   async getTransactionProof(txHash){
-    var transaction = await promisfy(this.web3.eth.getTransaction)(txHash)
-    if(!transaction){ throw new Error("Tx not found. Use archive node")}
+    var targetTx = await this.rpc.eth_getTransactionByHash(txHash)
+    // console.log(targetTx)
+    if(!targetTx){ throw new Error("Tx not found. Use archive node")}
 
-    var block = await promisfy(this.web3.eth.getBlock)(transaction.blockHash, true)
+    var block = await this.rpc.eth_getBlockByHash(targetTx.blockHash, true)
 
     var trie = new Trie();
 
-    await Promise.all(block.transactions.map((siblingTx) => {
-      var path = U.rlp.encode(siblingTx.transactionIndex)
-      var rawSignedSiblingTx = BuildProof._serializeTx(siblingTx)
-      return promisfy(trie.put, trie)(path, rawSignedSiblingTx) 
+    await Promise.all(block.transactions.map((siblingTx, index) => {
+      var siblingPath = U.rlp.encode(index)
+    // let siblingPath = siblingTx.transactionIndex === "0x0" ? U.rlp.encode(0) : U.rlp.encode(siblingTx.transactionIndex)
+      var serializedSiblingTx = new Transaction(siblingTx).serialize()
+      // console.log("HHHHHHH", serializedSiblingTx)
+      return promisfy(trie.put, trie)(siblingPath, serializedSiblingTx) 
     }))
 
-    let path = U.rlp.encode(transaction.transactionIndex)
-
-    var [rawTxNode,_,stack] = await promisfy(trie.findPath, trie)(path)
-
+    // console.log("INDEX: ",targetTx.transactionIndex)
+    let targetPath = encode(targetTx.transactionIndex)
+    var [rawTxNode,_,stack] = await promisfy(trie.findPath, trie)(targetPath)
+// console.log("CCCCC ", trie.root)
     return {
-      blockHash: BuildProof._strToBuf(transaction.blockHash),
-      header:    BuildProof._getHeaderBytes(block),
+      blockHash: U.toBuffer(targetTx.blockHash),
+      header:    Header.fromRpc(block),//BuildProof._getHeaderBytes(block),
       branch: BuildProof._rawStack(stack),
-      path: U.rlp.encode(transaction.transactionIndex),
-      value: rawTxNode.value
+      txIndex: targetTx.transactionIndex,
+      // path: targetPath,
+      value: rawTxNode.value,
+      tx: new Transaction(targetTx).raw,
     }
   }
 
   async getReceiptProof(txHash){ //WIP
-    var receipt = await promisfy(this.web3.eth.getTransactionReceipt)(txHash)
-    if(!receipt){ throw new Error("txhash/receipt not found. (use Archive node)")}
-    
-    var block = await promisfy(this.web3.eth.getBlock)(receipt.blockHash, false)
-  // console.log("BLOCK: ",block)
+    var targetReceipt = await this.rpc.eth_getTransactionReceipt(txHash)
+console.log("TTTTTT", targetReceipt.logs)
+    if(!targetReceipt){ throw new Error("txhash/targetReceipt not found. (use Archive node)")}
+let thing = Receipt.fromRpc(targetReceipt)
+console.log("\nTHING\n", thing.raw(), "\nTHING\n")
+
+    var block = await this.rpc.eth_getBlockByHash(targetReceipt.blockHash, false)
 
     var trie = new Trie();
 
     var receipts = await Promise.all(block.transactions.map((siblingTxHash) => {
-      return promisfy(this.web3.eth.getTransactionReceipt)(siblingTxHash)
+      return this.rpc.eth_getTransactionReceipt(siblingTxHash)
     }))
 
     await Promise.all(receipts.map((siblingReceipt, index) => {
-      var path = U.rlp.encode(index)
+      var siblingPath = U.rlp.encode(index)
+      // var rawReceipt = BuildProof._serializeReceipt(siblingReceipt)
+      // if(siblingReceipt.logs.length > 2){console.log(siblingReceipt)}
       var rawReceipt = BuildProof._serializeReceipt(siblingReceipt)
+if(siblingReceipt.transactionHash == txHash){
+  // console.log("RRRRRR", rawReceipt)
+  // console.log("\nDDDDDD\n", decode(rawReceipt))
+}
 
-      return promisfy(trie.put, trie)(path, rawReceipt)
+      return promisfy(trie.put, trie)(siblingPath, rawReceipt)
     }))
-
-    let path = U.rlp.encode(receipt.transactionIndex)
-    var [rawReceiptNode,_,stack] = await promisfy(trie.findPath, trie)(path)
-
+    
+// console.log("HHHHH ", targetReceipt, U.rlp.decode(BuildProof._serializeReceipt(targetReceipt)) ,"*********\n\n\n")
+    let targetPath = encode(targetReceipt.transactionIndex)
+    var [rawReceiptNode,_,stack] = await promisfy(trie.findPath, trie)(targetPath)
+// if(!rawReceiptNode){ console.log("NNNNNN ", targetPath, targetReceipt.transactionIndex)}
     return {
-      path:      U.rlp.encode(receipt.transactionIndex),
+      path:      targetPath,
+      txIndex:   targetReceipt.transactionIndex,
       value:     rawReceiptNode.value,
-      branch:     BuildProof._rawStack(stack),
+      branch:    BuildProof._rawStack(stack),
       header:    BuildProof._getHeaderBytes(block),
-      blockHash: BuildProof._strToBuf(receipt.blockHash)
+      blockHash: U.toBuffer(targetReceipt.blockHash)
     }
+    // return {
+    //   // path:      targetPath,
+    //   txIndex: targetReceipt.transactionIndex,
+    //   value:     rawReceiptNode.value,
+    //   branch:     BuildProof._rawStack(stack),
+    //   header:    BuildProof._getHeaderBytes(block),
+    //   blockHash: U.toBuffer(targetReceipt.blockHash)
+    // }
   }
 
   async getLogProof(txHash, logIndex){
@@ -186,35 +290,36 @@ class BuildProof{
 
 //private methods
   static _serializeReceipt(receipt){
-    var cummulativeGas = BuildProof._numToBuf(receipt.cumulativeGasUsed)
-    var bloomFilter = BuildProof._strToBuf(receipt.logsBloom)
-    var setOfLogs = BuildProof._encodeLogs(receipt.logs)
+    var cumulativeGas = U.toBuffer(receipt.cumulativeGasUsed)
+// console.log("cumulativeGas=== ", cumulativeGas, receipt.cumulativeGasUsed)
+    var bloomFilter = U.toBuffer(receipt.logsBloom)
+    var setOfLogs = BuildProof._rawLogs(receipt.logs)
     
     if(receipt.status != undefined && receipt.status != null){
-      // var status = BuildProof._strToBuf(receipt.status)
+      // var status = U.toBuffer(receipt.status)
       // This is to fix the edge case for passing integers as defined - https://github.com/ethereum/wiki/wiki/RLP
       if (receipt.status == "1" 
         || receipt.status == 1 
         || receipt.status == true
         || receipt.status == "true"
       ){
-        var rawReceipt = U.rlp.encode([1,cummulativeGas,bloomFilter,setOfLogs])
+        var rawReceipt = [1,cumulativeGas,bloomFilter,setOfLogs]
       } else {
-        var rawReceipt = U.rlp.encode([0,cummulativeGas,bloomFilter,setOfLogs])
+        var rawReceipt = [0,cumulativeGas,bloomFilter,setOfLogs]
       }
     }else{
-      var postTransactionState = BuildProof._strToBuf(receipt.root)
-      var rawReceipt = U.rlp.encode([postTransactionState,cummulativeGas,bloomFilter,setOfLogs])
+      var postTransactionState = U.toBuffer(receipt.root)
+      var rawReceipt = [postTransactionState,cumulativeGas,bloomFilter,setOfLogs]
     }
-    return rawReceipt
+    return U.rlp.encode(rawReceipt)
 
   }
-  static _encodeLogs(input){
+  static _rawLogs(input){
     var logs = []
     for (var i = 0; i < input.length; i++) {
-      var address = BuildProof._strToBuf(input[i].address);
-      var topics = input[i].topics.map(BuildProof._strToBuf)
-      var data = BuildProof._strToBuf(input[i].data)
+      var address = U.toBuffer(input[i].address);
+      var topics = input[i].topics.map(U.toBuffer)
+      var data = U.toBuffer(input[i].data)
       logs.push([address, topics, data])
     }
     return logs
@@ -224,10 +329,11 @@ class BuildProof{
     for (var i = 0; i < input.length; i++) {
       output.push(input[i].raw)
     }
-    return U.rlp.encode(output)
+    return new Branch(output)
   }
   static _getHeaderBytes(_block) {
     if(typeof _block.difficulty == "string" && _block.difficulty.slice(0,2) != "0x"){
+      console.log("suprised to be HERE  E&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
       _block.difficulty = '0x' + new U.BN(_block.difficulty).toString(16)
     }
     var block = new Block(_block)
@@ -236,7 +342,7 @@ class BuildProof{
   static _getBranchBytes(branchNodes){
     let rawbranchNodes = []
     for (var i = 0; i < branchNodes.length; i++) {
-      rawbranchNodes.push(U.rlp.decode(BuildProof._strToBuf(branchNodes[i])))
+      rawbranchNodes.push(U.rlp.decode(U.toBuffer(branchNodes[i])))
     }
     return U.rlp.encode(rawbranchNodes)
   }
@@ -251,13 +357,13 @@ class BuildProof{
     return 
   }
 
-  static _serializeTx(r){
-    let rpcTx = r
-    rpcTx.gasPrice = U.addHexPrefix(new U.BN(rpcTx.gasPrice).toString(16))
-    rpcTx.value = U.addHexPrefix(new U.BN(rpcTx.value).toString(16))
-    let tx = new Transaction(rpcTx).serialize()
-    return tx
-  }
+  // static _serializeTx(r){
+  //   let rpcTx = r
+  //   rpcTx.gasPrice = U.addHexPrefix(new U.BN(rpcTx.gasPrice).toString(16))
+  //   rpcTx.value = U.addHexPrefix(new U.BN(rpcTx.value).toString(16))
+  //   let tx = new Transaction(rpcTx).serialize()
+  //   return tx
+  // }
   static _strToBuf(input){
     if(input.slice(0,2) == "0x"){
       return Buffer.from(BuildProof._byteable(input.slice(2)), "hex")
@@ -268,6 +374,7 @@ class BuildProof{
   static _numToBuf(input){ return Buffer.from(BuildProof._byteable(input.toString(16)), "hex") }
 
   static _byteable(input){ 
+console.log("PPPPPPPPP", input)
     if(input.length % 2 == 0){
       return input
     }else if(input[0] != 0){
