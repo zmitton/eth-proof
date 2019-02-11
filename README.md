@@ -2,16 +2,17 @@
 
 This is a generalized merkle-patricia-proof module that now supports ethereum state proofs. That means you can prove _all_ Ethereum data. If you have a single hash that you trust (i.e. blockHash), you can use this module to succinctly prove exactly what data was or was not contained in the Ethereum blockchain at that snapshot in history.
 
-##### Warnings:
+#### Warnings:
 
 - Version 1 is not compatible with version 0. Major improvements were made to the API.
 - Proving absence (or null or undefined) isn't supported yet but I'll try to add it in the next few days. Follow the feature [here](https://github.com/zmitton/eth-proof/issues/8)
 - At time of this writing neither Infura nor any RPC provider's support `eth_getProof`, but infura should in the very near future. [updates on this](https://github.com/zmitton/eth-proof/issues/9).
 
 
-### Use `Version 1.0.0`
+## Use `Version 1.0.0`
 -----------------------
-##### Installation 
+
+#### Installation 
 
 ```
 npm install eth-proof
@@ -26,7 +27,8 @@ Allows you to make proofs in a few different ways:
 While the `GetAndVerify` functions are useful for _dapps / wallets / block explorers_  to validate data before showing it to users, the `Verify` functions may be needed for more complex applications like _side-chains / state-channels / plasma_.
 
 
-##### Instantiation
+#### Instantiation
+
 The getter classes (`GetProof` and `GetAndVerify`) request data from an RPC provider. So you'll have to instantiate an instance object with the RPC endpoint. 
 
 ```javascript
@@ -46,9 +48,12 @@ getAndVerify.txAgainstBlockHash(untrustedTxHash, blockHashThatITrust).then((tx)=
 ```
 
 
-#### API
---------
-##### GetAndVerify
+## API
+------
+
+#### GetAndVerify
+
+The `GetAndVerify` instance-functions take hex`string`s and return array-like `object`s of `buffer`s or, in the case of storage, simple `buffer`s
 
 - `async txAgainstBlockHash(txHash, blockHash){}`
 - `async receiptAgainstBlockHash(txHash, blockHash){}`
@@ -57,7 +62,7 @@ getAndVerify.txAgainstBlockHash(untrustedTxHash, blockHashThatITrust).then((tx)=
 
 They return the bare-bones objects indicated, after verifying everything about it (against a _blockHash you already trust_). The above is likely all you need for most applications. Please see the tests for sample uses. Please run only the file you are testing with `npm run test test/account.js` for example. The tests hit Infura extremely hard. Just one receipt proof for instance makes a separate request for every single receipt in the block from which the receipt resides.
 
-##### GetProof
+#### GetProof
 
 The `GetProof` instance-functions take hex`string`s and return generic `object`s with the proof information (Note: The different return `object`s have different `attributes`).
 
@@ -69,7 +74,7 @@ The `GetProof` instance-functions take hex`string`s and return generic `object`s
 Lastly just a helper for the direct RPC call as described [here](https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_getproof)
 - `async eth_getProof(address, storageAddresses, blockNumber){}`
 
-##### Verify
+#### Verify
 
 The Verifier class (`Verify`) does everything locally/client-side and doesn't require a connection. So you don't need to initialize an instance of the class, just use it directly. They are all class-functions and they execute _synchronously_.
 
@@ -98,8 +103,9 @@ The Verifier class (`Verify`) does everything locally/client-side and doesn't re
 * `Verify`ing that a given proof is correct - Can/should be done locally/client-side. These functions are synchronous and require no connections, so they are class-level functions - no instantiation needed. -->
 
 
-### Details
+## Details
 -----------
+
 You can granularly *verify* the relationship between any 2 pieces of data that are connected in the architecture diagram below. However, all merkle proofs should inevitably be proven *against a blockhash* to prove there was a cost of counterfeiting it. A centralized service can easily create a fake "proof" that will fool you, if you don't have an anchor (something you already trust) to compare it against.
 
 Establishing trust of a blockHash is a whole other issue. It relies on trust of a chain, which should ultimately rely on a set of heuristics involving expected total work at the current moment in time. This tool doesn't deal with that. It will however enable you to prove data against a `workChain` in later version. 
@@ -120,8 +126,9 @@ eP.getTransactionProof(txHash).then((result)=>{
 ``` -->
 
 
-### Testing
+## Testing
 -----------
+
 The tx and receipt tests use infura right now (because I dont have a completely full node). The account and storage tests point to localhost:8545 because infura doenst yet support the rpc call needed to attain them `eth_getProof` (from EIP 1186).
 
 Its all data currently on Ethereum Mainnet.
@@ -131,8 +138,9 @@ These tests hit Infura really hard because every tx or receipt proof requires mu
 Thanks to @simon-jentzsch, for EIP-1186 to make this data available from Geth and Parity clients.
 
 
-### Next Level Shit
+## Next Level Shit
 -------------------
+
 long term goal is are light clients that can validate an entire state transition. It would need proofs for all data touched during the state transition (tx).
 
 We also would like wallets to display only data that is proven.
