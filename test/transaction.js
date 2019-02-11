@@ -6,7 +6,6 @@ const { keccak, encode, decode, toBuffer, toHex } = require('./../ethUtils')
 const getAndVerify = new GetAndVerify("https://mainnet.infura.io")
 
 
-
 describe('Transaction GetAndVerify Against blockHash', () => {
 
   it('should be able to request a proof for 0xb53f7522 and verify it', async () => {

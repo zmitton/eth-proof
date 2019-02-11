@@ -1,5 +1,6 @@
 const Trie = require('merkle-patricia-tree')
-const Rpc  = require('./iso-rpc')
+// const Rpc  = require('./../iso-rpc/index')
+const Rpc  = require('isomorphic-rpc')
 const Verify = require('./verify')
 const Get = require('./getProof')
 

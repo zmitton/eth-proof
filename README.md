@@ -18,8 +18,7 @@ And you should be able to verify them using @wanderer and others' [merkle-patric
 npm install eth-proof
 ```
 ```javascript
-const Web3 = require('web3')
-const EP  = require('eth-proof')
+
 ```
 
 ### API
