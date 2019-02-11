@@ -30,7 +30,7 @@ class GetAndVerify{
     return prf.receipt
   }
   async accountAgainstBlockHash(accountAddress, blockHash){
-    let prf = await this.get.accountProof(accountAddress, [], blockHash)
+    let prf = await this.get.accountProof(accountAddress, blockHash)
     VerifyProof.blockhashContainsHeader(toBuffer(blockHash), prf.header)
     VerifyProof.headerContainsStateRoot(prf.header, Branch.root(prf.accountBranch))
     VerifyProof.rootContainsBranch(Branch.root(prf.accountBranch), prf.accountBranch)
@@ -38,7 +38,7 @@ class GetAndVerify{
     return prf.account
   }
   async storageAgainstBlockHash(accountAddress, position, blockHash){
-    let prf = await this.get.storageProof(accountAddress, [position], blockHash)
+    let prf = await this.get.storageProof(accountAddress, position, blockHash)
     VerifyProof.blockhashContainsHeader(toBuffer(blockHash), prf.header)
     VerifyProof.headerContainsStateRoot(prf.header, Branch.root(prf.accountBranch))
     VerifyProof.rootContainsBranch(Branch.root(prf.accountBranch), prf.accountBranch)
@@ -49,8 +49,8 @@ class GetAndVerify{
     return prf.storage
   }
 
-  async LogAgainstBlockHash(txHash, indexOfLog, blockHash){
-    //test all this part
+  async _logAgainstBlockHash(txHash, indexOfLog, blockHash){
+    // this is untested as of yet
     let prf = await this.get.receiptProof(txHash)
     VerifyProof.blockhashContainsHeader(toBuffer(blockHash), prf.header)
     VerifyProof.headerContainsReceiptsRoot(prf.header, Branch.root(prf.branch))

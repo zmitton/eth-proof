@@ -1,21 +1,22 @@
+const { promisfy } = require('promisfy')
 const Tree = require('merkle-patricia-tree')
 
 const Rpc  = require('isomorphic-rpc')
 const Verify = require('./verify')
 const Get = require('./getProof')
 
-const Transaction    = require('ethereumjs-tx') //remove for dependency
+const Transaction    = require('ethereumjs-tx') //to do: remove dependency
 const Account    = require('./account')
 const Branch = require('./branch')
 const Header = require('./header')
 const Receipt = require('./receipt')
 
-const { keccak, encode, decode, toBuffer, toHex, toWord, mappingAt } = require('./ethUtils')
-const { promisfy } = require('promisfy')
+const { encode, toBuffer } = require('./ethUtils')
 
 module.exports = class GetProof{
   constructor(rpcProvider = "http://localhost:8545"){
     this.rpc = new Rpc(rpcProvider)
+    this.eth_getProof = this.rpc.eth_getProof
   }
 
   async transactionProof(txHash){
@@ -68,14 +69,14 @@ module.exports = class GetProof{
       receipt: Receipt.fromRpc(targetReceipt)
     }
   }
-  async accountProof(address, storageAddresses = [], blockHash = null){
+  async accountProof(address, blockHash = null){
     let rpcBlock, rpcProof
-    if(blockHash){//function overloading
+    if(blockHash){
       rpcBlock = await this.rpc.eth_getBlockByHash(blockHash, false)
     }else{
       rpcBlock = await this.rpc.eth_getBlockByNumber('latest', false)
     }
-    rpcProof = await this.rpc.eth_getProof(address, storageAddresses, rpcBlock.number)
+    rpcProof = await this.eth_getProof(address, [], rpcBlock.number)
 
     return {
       header: Header.fromRpc(rpcBlock),
@@ -83,17 +84,17 @@ module.exports = class GetProof{
       account: Account.fromRpc(rpcProof)
     }
   }
-  async storageProof(address, storageAddresses = [], blockHash = null){
+  async storageProof(address, storageAddress, blockHash = null){
     let rpcBlock, rpcProof
     if(blockHash){
       rpcBlock = await this.rpc.eth_getBlockByHash(blockHash, false)
     }else{
       rpcBlock = await this.rpc.eth_getBlockByNumber('latest', false)
     }
-    rpcProof = await this.rpc.eth_getProof(address, storageAddresses, rpcBlock.number)
+    rpcProof = await this.eth_getProof(address, [storageAddress], rpcBlock.number)
 
     return {
-      header: Header.fromRpc(rpcBlock), //new Block(rpcBlock).header.raw,
+      header: Header.fromRpc(rpcBlock),
       accountBranch: Branch.fromRpc(rpcProof.accountProof),
       account: Account.fromRpc(rpcProof),
       storageBranch: Branch.fromRpc(rpcProof.storageProof[0].proof),

@@ -11,8 +11,7 @@
     "promisfy": "^1.2.0"
   },
   "scripts": {
-    "test": "node_modules/.bin/mocha --require should --timeout 15000",
-    "extended-test": "node_modules/.bin/mocha test"
+    "test": "node_modules/.bin/mocha --require should --timeout 15000"
   },
   "bin": {
     "ethproof": "./cli.js"
