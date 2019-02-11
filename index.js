@@ -1,7 +1,5 @@
-var VerifyProof = require('./verifyProof');
-var BuildProof = require('./buildProof');
+const GetAndVerify =  require('./getAndVerify.js')
+const GetProof =  require('./getProof.js')
+const VerifyProof =  require('./verify.js')
 
-//merging all functionality 
-var EthProof = Object.assign(BuildProof, VerifyProof);
-
-module.exports = EthProof
+module.exports = { GetAndVerify, GetProof, VerifyProof }
