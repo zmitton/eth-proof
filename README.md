@@ -149,17 +149,17 @@ These tests hit Infura really hard because every tx or receipt proof requires mu
 Thanks to @simon-jentzsch, for EIP-1186 to make this data available from Geth and Parity clients.
 
 
-## Next Level Shit
+## Future Tooling
 
 
 long term goal is are light clients that can validate an entire state transition. It would need proofs for all data touched during the state transition (tx).
 
 We also would like wallets to display only data that is proven.
 
-To complete the functionality attempted by this tool, a "light-client" tool (that downloads all the hashes and validates the work between the) will have to be built. The output of which will be a "workChain" which can interface with eth-proof to finally begin to leverage some of the really useful security properties of PoW blockchains.
+To complete the functionality attempted by this tool, a "light-client" tool (that downloads all the hashes and validates the work between them) will have to be built. The output of which will be a "workChain" which can interface with eth-proof to finally begin to leverage some of the really useful security properties of PoW blockchains.
 
 proving absence (or null or undefined):
-This is a really cool feature of the state tree. You can prove a key does not exist in the tree. In fact you need this property for certain aplications. Unfortunately I dont have that working yet, but it's the next feature, but its much cleaner to modify merkle-patricia-tree in order to support it. Check back in a few days.
+This is a really cool feature of the state tree. You can prove a key does not exist in the tree. In fact this property makes it possible to format the proof `branch` as an instance of `trie`. Unfortunately I dont have that working yet, but it's the next feature, but its much cleaner to modify merkle-patricia-tree in order to support it. Check back in a few days.
 
 There will be some major changes to the format of `Branch`. I have realized that a `branch` is really just a sparse `tree`. instead of using the array of nodes, I should be putting those nodes in the tree and then doing a regular `tree.get` to pull it back out. If the tree finds it, its verified, if it finds a contradictory node within its path, thats a proof of absence, but if it cant find an individual node by its hash, then the proof is invalid. Once branches are seen as mini trees we can even do the following:
 
