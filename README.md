@@ -9,8 +9,7 @@ This is a generalized merkle-patricia-proof module that now supports ethereum st
 - At time of this writing neither Infura nor any RPC provider's support `eth_getProof`, but infura should in the very near future. [updates on this](https://github.com/zmitton/eth-proof/issues/9).
 
 
-## Use `Version 1.0.0`
------------------------
+## Use
 
 #### Installation 
 
@@ -49,16 +48,18 @@ getAndVerify.txAgainstBlockHash(untrustedTxHash, blockHashThatITrust).then((tx)=
 
 
 ## API
-------
+
 
 #### GetAndVerify
 
 The `GetAndVerify` instance-functions take hex`string`s and return array-like `object`s of `buffer`s or, in the case of storage, simple `buffer`s
 
+-----
 - `async txAgainstBlockHash(txHash, blockHash){}`
 - `async receiptAgainstBlockHash(txHash, blockHash){}`
 - `async accountAgainstBlockHash(accountAddress, blockHash){}`
 - `async storageAgainstBlockHash(accountAddress, position, blockHash){}`
+-----
 
 They return the bare-bones objects indicated, after verifying everything about it (against a _blockHash you already trust_). The above is likely all you need for most applications. Please see the tests for sample uses. Please run only the file you are testing with `npm run test test/account.js` for example. The tests hit Infura extremely hard. Just one receipt proof for instance makes a separate request for every single receipt in the block from which the receipt resides.
 
@@ -66,10 +67,12 @@ They return the bare-bones objects indicated, after verifying everything about i
 
 The `GetProof` instance-functions take hex`string`s and return generic `object`s with the proof information (Note: The different return `object`s have different `attributes`).
 
+-----
 - `async transactionProof(txHash){}`
 - `async receiptProof(txHash){}`
 - `async accountProof(address, blockHash = null){}`
 - `async storageProof(address, storageAddress, blockHash = null){}`
+-----
 
 Lastly just a helper for the direct RPC call as described [here](https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_getproof)
 - `async eth_getProof(address, storageAddresses, blockNumber){}`
@@ -78,6 +81,7 @@ Lastly just a helper for the direct RPC call as described [here](https://github.
 
 The Verifier class (`Verify`) does everything locally/client-side and doesn't require a connection. So you don't need to initialize an instance of the class, just use it directly. They are all class-functions and they execute _synchronously_.
 
+-----
 - `static branchRootOf(branch){}`
 - `static rootContainsBranch(rootHash, branch){}`
 - `static accountContainsStorageRoot(account, storageRoot){}`
@@ -92,12 +96,18 @@ The Verifier class (`Verify`) does everything locally/client-side and doesn't re
 - `static receiptsBranchContainsReceiptAt(branch, receipt, indexOfTx){}`
 - `static receiptContainsLogAt(receipt, log, indexOfLog){}`
 - `static branchContainsValueAt(branch, value, path){}`
+-----
+
 `params :` array-like objects (`raw`) or straight `<buffer>`s
+
 `returns:` `bool`: `true`, or error thrown if false and/or malformed input
-<!-- This last one returns actual `value` from proof. If it is `NULL`, the functions above handle this special case and  -->
+
 - `static branchContains(path, branch){}`
+
 `params :` `path:` `<buffer>` `branch:` array-like object (`raw`)
+
 `returns:` `<buffer>`, or error thrown if false and/or malformed input
+
 <!-- * `GetProof` builds the proof - these request data from the blockchains so you'll have to instantiate a GetProof object with an rpc endpoint. It's functions are async using promises.
 
 * `Verify`ing that a given proof is correct - Can/should be done locally/client-side. These functions are synchronous and require no connections, so they are class-level functions - no instantiation needed. -->
@@ -113,6 +123,7 @@ Establishing trust of a blockHash is a whole other issue. It relies on trust of 
 The functions will look something like: `getAndVerify.txAgainstWorkChain(txHash, workChain){}`.
 
 So Proving work on the _"workChain"_ has very different properties and will be a separate project of its own. But _this_ module we be able verify _against_ the workChain (who's trust was establised elsewhere)
+
 <!-- ```javascript
 var txHash = '0xb53f752216120e8cbe18783f41c6d960254ad59fac16229d4eaec5f7591319de'
 eP.getTransactionProof(txHash).then((result)=>{
