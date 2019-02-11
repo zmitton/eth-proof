@@ -1,28 +1,14 @@
 {
   "name": "eth-proof",
-  "version": "0.3.2",
+  "version": "1.0.0",
   "description": "proving things in the Ethereum patricia tries (trees)",
   "main": "ethProof.js",
   "dependencies": {
-    "async": "^2.6.1",
-    "bn.js": "^4.11.8",
-    "ethereum-rpc-promise": "^2.1.3",
-    "ethereumjs-account": "^3.0.0",
-    "ethereumjs-block": "^1.7.1",
     "ethereumjs-tx": "1.3.7",
     "ethereumjs-util": "^6.0.0",
-    "iso-http": "0.0.5",
-    "isomorphic-fetch": "^2.2.1",
     "isomorphic-rpc": "^1.1.0",
-    "js-sha3": "^0.8.0",
-    "keccak": "^1.4.0",
-    "leveldown": "^1.9.0",
-    "levelup": "^1.3.9",
-    "memdown": "^3.0.0",
     "merkle-patricia-tree": "^2.3.2",
-    "promisfy": "^1.2.0",
-    "rlp": "^2.1.0",
-    "web3": "^1.0.0-beta.36"
+    "promisfy": "^1.2.0"
   },
   "scripts": {
     "test": "node_modules/.bin/mocha --require should --timeout 15000",

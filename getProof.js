@@ -1,5 +1,5 @@
-const Trie = require('merkle-patricia-tree')
-// const Rpc  = require('./../iso-rpc/index')
+const Tree = require('merkle-patricia-tree')
+
 const Rpc  = require('isomorphic-rpc')
 const Verify = require('./verify')
 const Get = require('./getProof')
@@ -24,15 +24,15 @@ module.exports = class GetProof{
 
     var block = await this.rpc.eth_getBlockByHash(targetTx.blockHash, true)
 
-    var trie = new Trie();
+    var tree = new Tree();
 
     await Promise.all(block.transactions.map((siblingTx, index) => {
       var siblingPath = encode(index)
       var serializedSiblingTx = new Transaction(siblingTx).serialize()
-      return promisfy(trie.put, trie)(siblingPath, serializedSiblingTx) 
+      return promisfy(tree.put, tree)(siblingPath, serializedSiblingTx) 
     }))
 
-    let [_,__,stack] = await promisfy(trie.findPath, trie)(encode(targetTx.transactionIndex))
+    let [_,__,stack] = await promisfy(tree.findPath, tree)(encode(targetTx.transactionIndex))
 
     return {
       header:  Header.fromRpc(block),
@@ -51,15 +51,15 @@ module.exports = class GetProof{
       return this.rpc.eth_getTransactionReceipt(siblingTxHash)
     }))
 
-    let trie = new Trie();
+    let tree = new Tree();
 
     await Promise.all(receipts.map((siblingReceipt, index) => {
       let siblingPath = encode(index)
       let serializedReceipt = Receipt.fromRpc(siblingReceipt).serialize()
-      return promisfy(trie.put, trie)(siblingPath, serializedReceipt)
+      return promisfy(tree.put, tree)(siblingPath, serializedReceipt)
     }))
 
-    let [_,__,stack] = await promisfy(trie.findPath, trie)(encode(targetReceipt.transactionIndex))
+    let [_,__,stack] = await promisfy(tree.findPath, tree)(encode(targetReceipt.transactionIndex))
 
     return {
       header:  Header.fromRpc(block),

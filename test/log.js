@@ -1,4 +1,4 @@
-const Web3 = require('web3')
+// const Web3 = require('web3')
 const expect = require("chai").expect;
 const { GetAndVerify, GetProof, VerifyProof } = require('./../index')
 
