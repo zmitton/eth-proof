@@ -114,7 +114,7 @@ The Verifier class (`Verify`) does everything locally/client-side and doesn't re
 
 
 ## Details
------------
+
 
 You can granularly *verify* the relationship between any 2 pieces of data that are connected in the architecture diagram below. However, all merkle proofs should inevitably be proven *against a blockhash* to prove there was a cost of counterfeiting it. A centralized service can easily create a fake "proof" that will fool you, if you don't have an anchor (something you already trust) to compare it against.
 
@@ -138,7 +138,7 @@ eP.getTransactionProof(txHash).then((result)=>{
 
 
 ## Testing
------------
+
 
 The tx and receipt tests use infura right now (because I dont have a completely full node). The account and storage tests point to localhost:8545 because infura doenst yet support the rpc call needed to attain them `eth_getProof` (from EIP 1186).
 
@@ -150,7 +150,7 @@ Thanks to @simon-jentzsch, for EIP-1186 to make this data available from Geth an
 
 
 ## Next Level Shit
--------------------
+
 
 long term goal is are light clients that can validate an entire state transition. It would need proofs for all data touched during the state transition (tx).
 
