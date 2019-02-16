@@ -1,4 +1,4 @@
-const { keccak, encode, decode, toBuffer, toHex } = require('./ethUtils')
+const { keccak, encode, decode, toBuffer, toHex } = require('./../ethUtils')
 
 class Account extends Array{
 
@@ -6,7 +6,7 @@ class Account extends Array{
   static get BALANCE_INDEX(){ return 1 }
   static get STORAGE_ROOT_INDEX(){ return 2 }
   static get CODE_HASH_INDEX(){ return 3 }
-  static get NULL(){return [toBuffer(), toBuffer(), keccak(encode()), keccak()]}
+  static get NULL(){return new Account([toBuffer(), toBuffer(), keccak(encode()), keccak()]) }
 
   constructor(raw = Account.NULL){
     super(...raw)
@@ -16,17 +16,21 @@ class Account extends Array{
     this.codeHash = this[Account.CODE_HASH_INDEX] 
   }
 
-  static fromObject(rpcResponse){ 
-    return new Account([
-      toBuffer(rpcResponse.nonce),
-      toBuffer(rpcResponse.balance), //deal with zero problem
-      toBuffer(rpcResponse.storageHash || rpcResponse.storageRoot || keccak(encode())),
-      toBuffer(rpcResponse.codeHash || rpcResponse.codeRoot || keccak())
-    ])
+  static fromObject(rpcResponse){
+    if(rpcResponse){
+      return new Account([
+        toBuffer(rpcResponse.nonce),
+        toBuffer(rpcResponse.balance), //deal with zero problem
+        toBuffer(rpcResponse.storageHash || rpcResponse.storageRoot || keccak(encode())),
+        toBuffer(rpcResponse.codeHash || rpcResponse.codeRoot || keccak())
+      ])
+    }else{
+      return new Account()
+    }
   }
   static fromRpc(rpcResponse){ return Account.fromObject(rpcResponse) }
-  static fromHexString(hexString){ return new Account(decode(hexString)) }
-  static fromBuffer(buf){ return new Account(decode(buf)) }
+  static fromHexString(hex){ return hex ? new Account(decode(hex)) : new Account() }
+  static fromBuffer(buf){ return buf ? new Account(decode(buf)) : new Account() }
   static fromRaw(raw){ return new Account(raw) }
 
 

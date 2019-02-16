@@ -41,13 +41,15 @@ const { GetAndVerify, GetProof, VerifyProof } = require('./../index')
 const getAndVerify = new GetAndVerify("http://localhost:8545")
 
 describe('Storage GetAndVerify Against BlockHash', () => {
+  // add test for the contract itself (account proof) and assert against known values for the code/storageRoot/value
+  // add test like above that checks a null account for all its values
+
   it('should get and verify "pos0 = 0x1234;"', async () => {
     let blockHash       = '0xb7964f87a97582605af695710ad252afa018a97384ba9438cf24e42fa9f0efc9'
     let accountAddress  = '0x92fd2D727ff572d0AA56493a0Ebc9b9e24d15295'
     let position        = '0x0'
     
     let storageValue = await getAndVerify.storageAgainstBlockHash(accountAddress, position, blockHash)
-
     storageValue.equals(toBuffer("0x1234")).should.be.true()
     storageValue.equals(toBuffer("0x9999")).should.be.false()
   });
@@ -108,18 +110,6 @@ describe('Storage GetAndVerify Against BlockHash', () => {
 
     storageValue.equals(keccak()).should.be.true()
   });
-// prove absence
-  // it('should get and verify that an undefined value is in fact "null"', async () => {
-  //   let blockHash       = '0x5de2488ca9ea618d5cdd095b4abf4e0b69c2fb2b3c83b7a26e383cb6e77dfc5f'
-  //   let accountAddress  = '0x92fd2D727ff572d0AA56493a0Ebc9b9e24d15295'
-  //   let position        = '0xff' // <== an unset position
-  //   let storageValue = await getAndVerify.storageAgainstBlockHash(accountAddress, position, blockHash)
-
-  //   storageValue.equals(toBuffer()).should.be.true()
-  //   storageValue.equals(toBuffer("0x1234")).should.be.false()
-  // });
-
-
   it('should get and verify some older contract data', async () => {
     let blockHash       = '0x5de2488ca9ea618d5cdd095b4abf4e0b69c2fb2b3c83b7a26e383cb6e77dfc5f'
     let accountAddress  = '0x9cc9bf39a84998089050a90087e597c26758685d'
@@ -154,5 +144,40 @@ describe('Storage GetAndVerify Against BlockHash', () => {
     storageValue.equals(toBuffer(5678)).should.be.true()
   });
 
+// prove absence
+  it('should get and verify that an undefined storage value is in fact null', async () => {
+    let blockHash       = '0x5de2488ca9ea618d5cdd095b4abf4e0b69c2fb2b3c83b7a26e383cb6e77dfc5f'
+    // let accountAddress  = '0x92fd2D727ff572d0AA56493a0Ebc9b9e24d15295'
+    let accountAddress  = '0xdeadbeef00000000000046283746191046394857' //non-existant account
+    let position        = '0x0' // <== an unset storage position
+    let storageValue = await getAndVerify.storageAgainstBlockHash(accountAddress, position, blockHash)
+
+    storageValue.equals(toBuffer()).should.be.true()
+    storageValue.equals(toBuffer("0x1234")).should.be.false()
+  });
+  it('should get and verify that an undefined storage value is in fact null', async () => {
+    let blockHash       = '0x5de2488ca9ea618d5cdd095b4abf4e0b69c2fb2b3c83b7a26e383cb6e77dfc5f'
+    let accountAddress  = '0x92fd2D727ff572d0AA56493a0Ebc9b9e24d15295'
+    let position        = '0xff' // <== an unset storage position
+    let storageValue = await getAndVerify.storageAgainstBlockHash(accountAddress, position, blockHash)
+
+    storageValue.equals(toBuffer()).should.be.true()
+    storageValue.equals(toBuffer("0x1234")).should.be.false()
+  });
+  it('should get and verify a storage slot is empty in a real contract', async () => {
+    let blockHash       = '0x5de2488ca9ea618d5cdd095b4abf4e0b69c2fb2b3c83b7a26e383cb6e77dfc5f'
+    let accountAddress  = '0x92fd2D727ff572d0AA56493a0Ebc9b9e24d15295'
+    let position        = '0x4' // <== an unset storage position
+    let storageValue = await getAndVerify.storageAgainstBlockHash(accountAddress, position, blockHash)
+
+    storageValue.equals(toBuffer()).should.be.true()
+  });
+  it('should get and verify a mapping slot is empty in a real mapping', async () => {
+    let blockHash       = '0x5de2488ca9ea618d5cdd095b4abf4e0b69c2fb2b3c83b7a26e383cb6e77dfc5f' 
+    let accountAddress  = '0x9cc9bf39a84998089050a90087e597c26758685d' 
+    let position        = mappingAt('0x1','0x1111111111111111111111111111111111111111') //nothing here
+    let storageValue = await getAndVerify.storageAgainstBlockHash(accountAddress, position, blockHash)
+    storageValue.equals(toBuffer()).should.be.true()
+  });
 
 });

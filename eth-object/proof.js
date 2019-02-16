@@ -1,23 +1,23 @@
-const { keccak, encode, decode, toBuffer, toHex } = require('./ethUtils')
+const { keccak, encode, decode, toBuffer, toHex } = require('./../ethUtils')
 
 
-class Branch extends Array{
+class Proof extends Array{
 
   constructor(raw = []){
     super(...raw)
   }
 
   static fromObject(obj){ return this.fromRpc(obj)}
-  static fromRpc(rpcResponseBranch){ 
-    let arrayBranch = rpcResponseBranch.map((strNode)=>{ return decode(strNode) })
-    return new Branch(arrayBranch)
+  static fromRpc(rpcResponseProof){ 
+    let arrayProof = rpcResponseProof.map((stringNode)=>{ return decode(stringNode) })
+    return new Proof(arrayProof)
   }
-  static fromHexString(hexString){ return new Branch(decode(hexString)) }
-  static fromBuffer(buf){ return new Branch(decode(buf)) }
-  static fromRaw(raw){ return new Branch(raw) }
+  static fromHexString(hexString){ return new Proof(decode(hexString)) }
+  static fromBuffer(buf){ return new Proof(decode(buf)) }
+  static fromRaw(raw){ return new Proof(raw) }
   static fromStack(stack){ 
-    let arrayBranch = stack.map((trieNode)=>{ return trieNode.raw })
-    return new Branch(arrayBranch)
+    let arrayProof = stack.map((trieNode)=>{ return trieNode.raw })
+    return new Proof(arrayProof)
   }
   static root(arrayLikeThing){ return keccak(encode(arrayLikeThing[0])) }
 
@@ -41,7 +41,7 @@ class Branch extends Array{
   toString(){ return this.toJson() } // alias
 }
 
-module.exports = Branch
+module.exports = Proof
 
 
 

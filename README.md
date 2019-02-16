@@ -1,12 +1,11 @@
-# Eth Proof
+# Eth Proof `2.0.0`
 
-This is a generalized merkle-patricia-proof module that now supports ethereum state proofs. That means you can prove _all_ Ethereum data. If you have a single hash that you trust (i.e. blockHash), you can use this module to succinctly prove exactly what data was or was not contained in the Ethereum blockchain at that snapshot in history.
+This is a generalized merkle-patricia-proof module that now supports ethereum state proofs. That means you can prove _all_ Ethereum data (including that a path is `null`). If you have a single hash that you trust (i.e. blockHash), you can use this module to succinctly prove exactly what data was or was not contained in the Ethereum blockchain at that snapshot in history.
 
 #### Warnings:
 
-- Version 1 is not compatible with version 0. Major improvements were made to the API.
-- Proving absence (or null or undefined) isn't supported yet but I'll try to add it in the next few days. Follow the feature [here](https://github.com/zmitton/eth-proof/issues/8)
-- At time of this writing neither Infura nor any RPC provider's support `eth_getProof`, but infura should in the very near future. [updates on this](https://github.com/zmitton/eth-proof/issues/9).
+- Version 2 is not compatible with version 0, or 1. Major improvements were made to the API.
+- At time of this writing neither Infura nor any RPC provider's support `eth_getProof`, but infura will in the near future. [updates on this](https://github.com/zmitton/eth-proof/issues/9).
 
 
 ## Use
@@ -115,8 +114,9 @@ The Verifier class (`Verify`) does everything locally/client-side and doesn't re
 
 ## Details
 
-
 You can granularly *verify* the relationship between any 2 pieces of data that are connected in the architecture diagram below. However, all merkle proofs should inevitably be proven *against a blockhash* to prove there was a cost of counterfeiting it. A centralized service can easily create a fake "proof" that will fool you, if you don't have an anchor (something you already trust) to compare it against.
+
+![Architecture Diagram 1](https://raw.githubusercontent.com/zmitton/eth-proof/master/img/architectureDiagram.JPG)
 
 Establishing trust of a blockHash is a whole other issue. It relies on trust of a chain, which should ultimately rely on a set of heuristics involving expected total work at the current moment in time. This tool doesn't deal with that. It will however enable you to prove data against a `workChain` in later version. 
 

@@ -1,4 +1,4 @@
-const { keccak, encode, decode, toBuffer, toHex } = require('./ethUtils')
+const { keccak, encode, decode, toBuffer, toHex } = require('./../ethUtils')
 const Log = require('./log')
 
 class Receipt extends Array{

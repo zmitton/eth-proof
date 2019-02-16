@@ -1,17 +1,19 @@
+const { encode, toBuffer } = require('./ethUtils')
 const { promisfy } = require('promisfy')
+
 const Tree = require('merkle-patricia-tree')
 
 const Rpc  = require('isomorphic-rpc')
-const Verify = require('./verify')
-const Get = require('./getProof')
+const Verify = require('./verifyProof')
+// const Get = require('./getProof')
 
-const Transaction    = require('ethereumjs-tx') //to do: remove dependency
-const Account    = require('./account')
-const Branch = require('./branch')
-const Header = require('./header')
-const Receipt = require('./receipt')
+// const Transaction = require('ethereumjs-tx')//to do: remove dependency
+const Transaction = require('./eth-object/transaction')//to do: remove dependency
 
-const { encode, toBuffer } = require('./ethUtils')
+const Account = require('./eth-object/account')
+const Proof   = require('./eth-object/proof')
+const Header  = require('./eth-object/header')
+const Receipt = require('./eth-object/receipt')
 
 module.exports = class GetProof{
   constructor(rpcProvider = "http://localhost:8545"){
@@ -20,16 +22,16 @@ module.exports = class GetProof{
   }
 
   async transactionProof(txHash){
-    var targetTx = await this.rpc.eth_getTransactionByHash(txHash)
+    let targetTx = await this.rpc.eth_getTransactionByHash(txHash)
     if(!targetTx){ throw new Error("Tx not found. Use archive node")}
 
-    var block = await this.rpc.eth_getBlockByHash(targetTx.blockHash, true)
+    let block = await this.rpc.eth_getBlockByHash(targetTx.blockHash, true)
 
-    var tree = new Tree();
+    let tree = new Tree();
 
     await Promise.all(block.transactions.map((siblingTx, index) => {
-      var siblingPath = encode(index)
-      var serializedSiblingTx = new Transaction(siblingTx).serialize()
+      let siblingPath = encode(index)
+      let serializedSiblingTx = Transaction.fromRpc(siblingTx).serialize()
       return promisfy(tree.put, tree)(siblingPath, serializedSiblingTx) 
     }))
 
@@ -37,9 +39,8 @@ module.exports = class GetProof{
 
     return {
       header:  Header.fromRpc(block),
-      branch:  Branch.fromStack(stack),
+      txProof:  Proof.fromStack(stack),
       txIndex: targetTx.transactionIndex,
-      tx:      new Transaction(targetTx).raw,
     }
   }
   async receiptProof(txHash){
@@ -64,9 +65,8 @@ module.exports = class GetProof{
 
     return {
       header:  Header.fromRpc(block),
-      branch:  Branch.fromStack(stack),
+      receiptProof:  Proof.fromStack(stack),
       txIndex: targetReceipt.transactionIndex,
-      receipt: Receipt.fromRpc(targetReceipt)
     }
   }
   async accountProof(address, blockHash = null){
@@ -80,8 +80,7 @@ module.exports = class GetProof{
 
     return {
       header: Header.fromRpc(rpcBlock),
-      accountBranch: Branch.fromRpc(rpcProof.accountProof),
-      account: Account.fromRpc(rpcProof)
+      accountProof: Proof.fromRpc(rpcProof.accountProof),
     }
   }
   async storageProof(address, storageAddress, blockHash = null){
@@ -95,10 +94,8 @@ module.exports = class GetProof{
 
     return {
       header: Header.fromRpc(rpcBlock),
-      accountBranch: Branch.fromRpc(rpcProof.accountProof),
-      account: Account.fromRpc(rpcProof),
-      storageBranch: Branch.fromRpc(rpcProof.storageProof[0].proof),
-      storage: toBuffer(rpcProof.storageProof[0].value),
+      accountProof: Proof.fromRpc(rpcProof.accountProof),
+      storageProof: Proof.fromRpc(rpcProof.storageProof[0].proof),
     }
   }
 }
