@@ -116,7 +116,7 @@ The Verifier class (`Verify`) does everything locally/client-side and doesn't re
 
 You can granularly *verify* the relationship between any 2 pieces of data that are connected in the architecture diagram below. However, all merkle proofs should inevitably be proven *against a blockhash* to prove there was a cost of counterfeiting it. A centralized service can easily create a fake "proof" that will fool you, if you don't have an anchor (something you already trust) to compare it against.
 
-![Architecture Diagram 1](https://raw.githubusercontent.com/zmitton/eth-proof/master/img/architecture-diagram.JPG)
+![Architecture Diagram 1](https://raw.githubusercontent.com/zmitton/eth-proof/master/img/architecture-diagram.JPG | width=150)
 
 Establishing trust of a blockHash is a whole other issue. It relies on trust of a chain, which should ultimately rely on a set of heuristics involving expected total work at the current moment in time. This tool doesn't deal with that. It will however enable you to prove data against a `workChain` in later version. 
 
