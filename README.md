@@ -78,34 +78,8 @@ Lastly just a helper for the direct RPC call as described [here](https://github.
 
 #### Verify
 
-The Verifier class (`Verify`) does everything locally/client-side and doesn't require a connection. So you don't need to initialize an instance of the class, just use it directly. They are all class-functions and they execute _synchronously_.
+The Verifier class (`Verify`) does everything locally/client-side and doesn't require a connection. So you don't need to initialize an instance of the class, just use it directly. They are all class-functions. Some a _synchronous_ while others (the ones that utilize a tree under the hood) are _async_.
 
------
-- `static branchRootOf(branch){}`
-- `static rootContainsBranch(rootHash, branch){}`
-- `static accountContainsStorageRoot(account, storageRoot){}`
-- `static blockhashContainsHeader(blockhash, header){}`
-- `static headerContainsHashAt(header, hash, indexOfRoot){}`
-- `static headerContainsStateRoot(header, stateRoot){}`
-- `static accountBranchContainsAccountAt(branch, account, address){}`
-- `static storageBranchContainsStorageAt(branch, storageValue, position){}`
-- `static headerContainsTxsRoot(header, txRoot){}`
-- `static txsBranchContainsTxAt(branch, tx, indexOfTx){}`
-- `static headerContainsReceiptsRoot(header, receiptsRoot){}`
-- `static receiptsBranchContainsReceiptAt(branch, receipt, indexOfTx){}`
-- `static receiptContainsLogAt(receipt, log, indexOfLog){}`
-- `static branchContainsValueAt(branch, value, path){}`
------
-
-`params :` array-like objects (`raw`) or straight `<buffer>`s
-
-`returns:` `bool`: `true`, or error thrown if false and/or malformed input
-
-- `static branchContains(path, branch){}`
-
-`params :` `path:` `<buffer>` `branch:` array-like object (`raw`)
-
-`returns:` `<buffer>`, or error thrown if false and/or malformed input
 
 <!-- * `GetProof` builds the proof - these request data from the blockchains so you'll have to instantiate a GetProof object with an rpc endpoint. It's functions are async using promises.
 
