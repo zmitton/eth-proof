@@ -116,7 +116,10 @@ The Verifier class (`Verify`) does everything locally/client-side and doesn't re
 
 You can granularly *verify* the relationship between any 2 pieces of data that are connected in the architecture diagram below. However, all merkle proofs should inevitably be proven *against a blockhash* to prove there was a cost of counterfeiting it. A centralized service can easily create a fake "proof" that will fool you, if you don't have an anchor (something you already trust) to compare it against.
 
-![Architecture Diagram 1](https://raw.githubusercontent.com/zmitton/eth-proof/master/img/architecture-diagram.JPG | width=150)
+<img src="https://raw.githubusercontent.com/zmitton/eth-proof/master/img/architecture-diagram.JPG" width="300">
+
+
+<!-- ![Architecture Diagram 1](https://raw.githubusercontent.com/zmitton/eth-proof/master/img/architecture-diagram.JPG | width=150) -->
 
 Establishing trust of a blockHash is a whole other issue. It relies on trust of a chain, which should ultimately rely on a set of heuristics involving expected total work at the current moment in time. This tool doesn't deal with that. It will however enable you to prove data against a `workChain` in later version. 
 
@@ -151,7 +154,6 @@ Thanks to @simon-jentzsch, for EIP-1186 to make this data available from Geth an
 
 ## Future Tooling
 
-
 long term goal is are light clients that can validate an entire state transition. It would need proofs for all data touched during the state transition (tx).
 
 We also would like wallets to display only data that is proven.
@@ -159,10 +161,10 @@ We also would like wallets to display only data that is proven.
 To complete the functionality attempted by this tool, a "light-client" tool (that downloads all the hashes and validates the work between them) will have to be built. The output of which will be a "workChain" which can interface with eth-proof to finally begin to leverage some of the really useful security properties of PoW blockchains.
 
 proving absence (or null or undefined):
-This is a really cool feature of the state tree. You can prove a key does not exist in the tree. In fact this property makes it possible to format the proof `branch` as an instance of `trie`. Unfortunately I dont have that working yet, but it's the next feature, but its much cleaner to modify merkle-patricia-tree in order to support it. Check back in a few days.
+This is a really cool feature of the state tree. You can prove a key does not exist in the tree. In fact this property makes it possible to format the proof `branch` as an instance of `trie`. Null-proofs are currently working in version 2!
 
-There will be some major changes to the format of `Branch`. I have realized that a `branch` is really just a sparse `tree`. instead of using the array of nodes, I should be putting those nodes in the tree and then doing a regular `tree.get` to pull it back out. If the tree finds it, its verified, if it finds a contradictory node within its path, thats a proof of absence, but if it cant find an individual node by its hash, then the proof is invalid. Once branches are seen as mini trees we can even do the following:
+There will be some major changes to the format of `proof`. I have realized that a `proof` is really just a sparse `tree`. instead of using the array of nodes, I should be putting those nodes in the tree and then doing a regular `tree.get` to pull it back out. If the tree finds it, its verified, if it finds a contradictory node within its path, thats a proof of absence, but if it cant find an individual node by its hash, then the proof is invalid. Once branches are seen as mini trees we can even do the following:
 
-The client can initialize its `state-tree` object using the branch from the proof (or branches, as they will likely just have repeats), generating an in-memory level-db as `key = sha3(value)` for element in parentNode array. It puts them in this mini state trie, and inits the root. then it can run its EVM implementation directly on this trie as usual. at the end it checks its new root to verify legitimacy. If the EVM tries to traverse any data that doesnt exist (even null data must have proof of null), it should return as invalid.
+The client can initialize its `state-tree` object using the branch from the proof (or branches, as they will likely just have repeats), generating an in-memory level-db as `key = sha3(value)` for element in parentNode array. It puts them in this mini state trie, and inits the root. then it can run its EVM implementation directly on this trie as usual. at the end it checks its new root to verify legitimacy. If the EVM tries to traverse any data that doesnt exist (even null data must have proof of null), it should return as an invalid (currently "missing node error").
 
 We are also finding it useful to relay ethereum to itself. It sounds weird, but you can later make proofs about any historical information and information not usually available to the EVM can be made available as needed from the relay contract.
