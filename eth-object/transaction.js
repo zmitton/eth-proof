@@ -33,7 +33,7 @@ class Transaction extends Array{
     ])
   }
   static fromRpc(rpcResponse){ return Transaction.fromObject(rpcResponse) }
-  static fromHexString(hexString){ return new Transaction(decode(hexString)) }
+  static fromHex(hexString){ return new Transaction(decode(hexString)) }
   static fromBuffer(buf){ return new Transaction(decode(buf)) }
   static fromRaw(raw){ return new Transaction(raw) }
 

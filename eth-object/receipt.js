@@ -36,7 +36,7 @@ class Receipt extends Array{
     ])
   }
   static fromRpc(rpcResponse){ return Receipt.fromObject(rpcResponse) }
-  static fromHexString(hexString){ return new Receipt(decode(hexString)) }
+  static fromHex(hexString){ return new Receipt(decode(hexString)) }
   static fromBuffer(buf){ return new Receipt(decode(buf)) }
   static fromRaw(raw){ return new Receipt(raw) }
 

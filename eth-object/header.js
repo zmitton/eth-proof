@@ -62,7 +62,7 @@ class Header extends Array{
   }
   static fromObject(obj){ return this.fromRpc(obj) }
 
-  static fromHexString(hexString){ return new Header(decode(hexString)) }
+  static fromHex(hexString){ return new Header(decode(hexString)) }
   static fromBuffer(buf){ return new Header(decode(buf)) }
   static fromRaw(raw){ return new Header(raw) }
 

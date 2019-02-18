@@ -65,7 +65,8 @@ describe('Account GetAndVerify Against BlockHash', () => {
     let blockHash = '0xb7964f87a97582605af695710ad252afa018a97384ba9438cf24e42fa9f0efc9'
     let accountAddress = '0x9cc9bf39a84998089050a90087e597c26758685d'
     let account = await getAndVerify.accountAgainstBlockHash(accountAddress, blockHash)
-    // console.log(prf)
+    console.log(account.serialize())
+    console.log(account.toHex())
   });
   it('should be able to request a proof for 0xb53f7522 and verify it', async () => {
     let blockHash = '0x7315156cc8347cf9bfac8a4cd1db6f5d4727b06b3fe14feba62381335b2d14d5'

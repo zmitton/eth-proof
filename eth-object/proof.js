@@ -12,7 +12,7 @@ class Proof extends Array{
     let arrayProof = rpcResponseProof.map((stringNode)=>{ return decode(stringNode) })
     return new Proof(arrayProof)
   }
-  static fromHexString(hexString){ return new Proof(decode(hexString)) }
+  static fromHex(hexString){ return new Proof(decode(hexString)) }
   static fromBuffer(buf){ return new Proof(decode(buf)) }
   static fromRaw(raw){ return new Proof(raw) }
   static fromStack(stack){ 

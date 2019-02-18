@@ -29,7 +29,7 @@ class Account extends Array{
     }
   }
   static fromRpc(rpcResponse){ return Account.fromObject(rpcResponse) }
-  static fromHexString(hex){ return hex ? new Account(decode(hex)) : new Account() }
+  static fromHex(hex){ return hex ? new Account(decode(hex)) : new Account() }
   static fromBuffer(buf){ return buf ? new Account(decode(buf)) : new Account() }
   static fromRaw(raw){ return new Account(raw) }
 
