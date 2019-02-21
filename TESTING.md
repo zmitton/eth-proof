@@ -4,7 +4,7 @@ Testing is a project specific concern. That being said, each project may use a j
 
 We use [jenkins-vagrant](https://github.com/etclabscore/jenkins-vagrant)
 
-Here is an example jenkins file that runs node project tests in each of osx, linux and windows:
+Here is an example [jenkinsfile](https://jenkins.io/doc/book/pipeline/jenkinsfile/) that runs node project tests in each of osx, linux and windows:
 
 ```
 pipeline {
