@@ -13,7 +13,7 @@ pipeline {
     stage('Run Tests') {
       parallel {
         stage('test') {
-	        agent {
+          agent {
             label 'macos'
           }
           steps {
