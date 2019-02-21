@@ -6,7 +6,7 @@ We use [jenkins-vagrant](https://github.com/etclabscore/jenkins-vagrant)
 
 Here is an example jenkins file that runs node project tests in each of osx, linux and windows:
 
-```yaml
+```
 pipeline {
   agent none
   stages {
