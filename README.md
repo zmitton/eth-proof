@@ -4,6 +4,12 @@ Pristine is an open source repository in its original condition.
 
 There are a lack of repositories to start from to build community driven open source projects. Pristine is a starting point, it follows a Documentation Driven Development approach, and can be used as a resource to augment existing documentation.
 
+## How to use Pristine in your project
+
+There are 2 options for using pristine with your project. 
+1. Fork this repo as the start of your own, OR
+2. [follow these instructions](https://thoughts.t37.net/merging-2-different-git-repositories-without-losing-your-history-de7a06bba804)
+
 ## Documentation Driven Development
 
 There are many ways to drive open source development. Documenting the problem in the README gives a middle ground between technical and non-technical specifications. This allows organizing solutions to this challenge around community and documentation.
