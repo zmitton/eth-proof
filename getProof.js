@@ -4,12 +4,9 @@ const { promisfy } = require('promisfy')
 const Tree = require('merkle-patricia-tree')
 
 const Rpc  = require('isomorphic-rpc')
-const Verify = require('./verifyProof')
-// const Get = require('./getProof')
+// const Verify = require('./verifyProof')
 
-// const Transaction = require('ethereumjs-tx')//to do: remove dependency
-const Transaction = require('./eth-object/transaction')//to do: remove dependency
-
+const Transaction = require('./eth-object/transaction')
 const Account = require('./eth-object/account')
 const Proof   = require('./eth-object/proof')
 const Header  = require('./eth-object/header')
