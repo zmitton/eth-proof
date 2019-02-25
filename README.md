@@ -8,7 +8,7 @@ There are a lack of repositories to start from to build community driven open so
 
 There are 2 options for using pristine with your project. 
 1. Fork this repo as the start of your own, OR
-2. [follow these instructions](https://thoughts.t37.net/merging-2-different-git-repositories-without-losing-your-history-de7a06bba804)
+2. [follow these instructions](https://thoughts.t37.net/merging-2-different-git-repositories-without-losing-your-history-de7a06bba804) to use it on an existing repository.
 
 ## Documentation Driven Development
 
