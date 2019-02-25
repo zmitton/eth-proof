@@ -2,6 +2,8 @@ const { keccak, encode, decode, toBuffer, toWord } = require('./ethUtils')
 const Tree = require('merkle-patricia-tree')
 
 const Account = require('./eth-object/account')
+const Transaction = require('./eth-object/transaction')
+const Receipt = require('./eth-object/receipt')
 
 const ACCOUNTS_ROOT_INDEX = 3
 const TXS_ROOT_INDEX      = 4
@@ -43,14 +45,16 @@ class Verify{
     }
   }
   static async getAccountFromProofAt(proof, address){
-    let fromProof = await this.proofContainsValueAt(proof, keccak(address))
-    return Account.fromBuffer(fromProof) // null returned as Account.NULL
+    let accountBuffer = await this.proofContainsValueAt(proof, keccak(address))
+    return Account.fromBuffer(accountBuffer) // null returned as Account.NULL
   }
   static async getTxFromTxProofAt(proof, indexOfTx){
-    return this.proofContainsValueAt(proof, encode(indexOfTx))
+    let txBuffer = await this.proofContainsValueAt(proof, encode(indexOfTx))
+    return Transaction.fromBuffer(txBuffer)
   }
   static async getReceiptFromReceiptProofAt(proof, indexOfTx){
-    return this.proofContainsValueAt(proof, encode(indexOfTx))
+    let receiptBuffer = await this.proofContainsValueAt(proof, encode(indexOfTx))
+    return Receipt.fromBuffer(receiptBuffer)
   }
 
   static async proofContainsValueAt(proof, path){
