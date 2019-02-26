@@ -1,21 +1,28 @@
-const { keccak, encode, decode, toBuffer, toWord } = require('./ethUtils')
+const { keccak, encode, decode, toBuffer, toWord } = require('./utils')
+
 const Tree = require('merkle-patricia-tree')
 
-const Account = require('./eth-object/account')
-const Transaction = require('./eth-object/transaction')
-const Receipt = require('./eth-object/receipt')
+const { Account, Header, Log, Proof, Receipt, Transaction } = require('eth-object')
 
-const ACCOUNTS_ROOT_INDEX = 3
-const TXS_ROOT_INDEX      = 4
-const RECEIPTS_ROOT_INDEX = 5
-const SET_OF_LOGS_INDEX = 3
+// const Account     = require('./eth-object/account')
+// const Transaction = require('./eth-object/transaction')
+// const Receipt     = require('./eth-object/receipt')
+
+const ACCOUNTS_ROOT_INDEX = 3 // within header
+const TXS_ROOT_INDEX      = 4 // within header
+const RECEIPTS_ROOT_INDEX = 5 // within header
+
+const STORAGE_ROOT_INDEX  = 2 // within account
+const SET_OF_LOGS_INDEX   = 3 // within receipt
 
 class Verify{
-  static chainContainsBlockHash(chain, blockHash){ throw new Error("feature not yet available") }
-  static getRootFromProof(proof){ return keccak(encode(proof[0])) } //todo: move to util
+
+  static chainContainsBlockHash(chain, blockHash){ throw new Error("Feature not yet available") }
+
+  static getRootFromProof(proof){ return keccak(encode(proof[0])) }
 
   static accountContainsStorageRoot(account){
-    return account[Account.STORAGE_ROOT_INDEX]
+    return account[STORAGE_ROOT_INDEX]
   }
   static getBlockHashFromHeader(header){
     return keccak(encode(header))

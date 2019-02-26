@@ -32,7 +32,7 @@ contract Storage {
     }
 }
 **************************************************************************/
-const { keccak, encode, decode, toBuffer, toHex, toWord, mappingAt } = require('./../ethUtils')
+const { keccak, encode, decode, toBuffer, toHex, toWord, mappingAt } = require('./../utils')
 
 // const expect = require("chai").expect;
 

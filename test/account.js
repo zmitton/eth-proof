@@ -1,8 +1,12 @@
-const { keccak, encode, toBuffer } = require('./../ethUtils')
+const { keccak, encode, toBuffer } = require('./../utils')
 const { GetAndVerify, GetProof, VerifyProof } = require('./../index')
 const getAndVerify = new GetAndVerify("http://localhost:8545")
 const expect = require("chai").expect;
-const Account = require('./../eth-object/account')
+
+const { Account, Header, Log, Proof, Receipt, Transaction } = require('eth-object')
+
+// const Account = require('./../eth-object/account')
+// const { Account } = require('./../../eth-object/index')
 
 
 describe('Account GetAndVerify Against BlockHash', () => {
@@ -65,12 +69,26 @@ describe('Account GetAndVerify Against BlockHash', () => {
     let blockHash = '0xb7964f87a97582605af695710ad252afa018a97384ba9438cf24e42fa9f0efc9'
     let accountAddress = '0x9cc9bf39a84998089050a90087e597c26758685d'
     let account = await getAndVerify.accountAgainstBlockHash(accountAddress, blockHash)
+    // console.log("\n\nPLAIN\n", account)
+    // console.log("\n\nRAW\n", account.raw)
+    // console.log("\n\nOBJECT\n", account.object)
+    // console.log("\n\nHEX\n", account.hex)
+    // console.log("\n\nBUFFER\n", account.buffer)
+    // console.log("\n\nJSON\n", account.json)
+
+    // console.log("\n\nSERIALIZE()\n", account.serialize())
+    // console.log("\n\nTOBUFFER()\n", account.toBuffer())
+    // console.log("\n\nTOHEX()\n", account.toHex())
+    // console.log("\n\nTOOBJECT()\n", account.toObject())
+    // console.log("\n\nTOSTRING()\n", account.toString())
+    // console.log("\n\nTOJSON()\n", account.toJson())
+    // console.log("\n\nULEs()\n", Account.fields)
+    
   });
   it('should be able to request a proof for 0xb53f7522 and verify it', async () => {
     let blockHash = '0x7315156cc8347cf9bfac8a4cd1db6f5d4727b06b3fe14feba62381335b2d14d5'
     let accountAddress = '0x9cc9bf39a84998089050a90087e597c26758685d'
     let account = await getAndVerify.accountAgainstBlockHash(accountAddress, blockHash)
-    // console.log(account)
   });
   it('should be able to prove an account does not exist', async () => {
     let blockHashBlockZero = '0xd4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3'

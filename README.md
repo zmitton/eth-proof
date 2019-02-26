@@ -101,7 +101,9 @@ However those have been made and can be found [here](https://github.com/ConsenSy
 
 ## Formating
 
-The data formats used/returned for account, `header`, `log`, `proof`, `receipt`, and t`ransaction` are my own creation `eth-object`. They mimic the native Ethereum format of being _arrays of byteArrays and nested arrays (of the same)_. An account will look like this:
+The data formats used/returned are *eth-object*s [documented here](https://github.com/zmitton/eth-object).
+
+They are `account`, `header`, `log`, `proof`, `receipt`, and `transaction`. Eth-objects mimic the native Ethereum format of being _arrays of byteArrays and nested arrays (of the same)_. An account will look something like this:
 
 ```
 [
@@ -109,7 +111,6 @@ The data formats used/returned for account, `header`, `log`, `proof`, `receipt`,
   <Buffer >,
   <Buffer c1 49 53 a6 4f 69 63 26 19 63 6f bd f3 27 e8 83 43 6b 9f d1 b1 02 52 20 e5 0f b7 0a b7 d2 e2 a8>,
   <Buffer f7 cf 62 32 b8 d6 55 b9 22 68 b3 56 53 25 e8 89 7f 2f 82 d6 5a 4e aa f4 e7 8f ce f0 4e 8f ee 6a>,
-  nonce: <Buffer 01>
 ]
 ```
 
@@ -120,7 +121,7 @@ console.log(account[0]) // => <buffer 01>
 console.log(account.nonce) // => <buffer 01>
 ```
 
-They can be converted to other useful formats
+And helpers to build and convert them to all the other useful formats:
 
 ```
 console.log(account.toJson())
@@ -136,16 +137,14 @@ console.log(account.toHex()) // rlp encoding as a hex string
 // "0xf8440180a0c14953a64f69632619636fbdf327e883436b9fd1b1025220e50fb70ab7d2e2a8a0f7cf6232b8d655b92268b3565325e8897f2f82d65a4eaaf4e78fcef04e8fee6a"
 ```
 
-And they can be created from a direct RPC result or any of the other formats above:
+Can be created from a direct RPC result or any of the above:
 
 ```
-Account.fromRPC(rpcResponseString)
+Account.fromRpc(rpcResponseString)
 Account.fromHex(rlpString)
 Account.fromBuffer(rlpBuffer)
 Account.fromRaw(arrayOfBuffers)
 ```
-
-Hopefully this will be abstracted as its own NPM module soon at which point they will be subject to slight modification.
 
 ## Testing
 

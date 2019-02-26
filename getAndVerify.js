@@ -2,7 +2,7 @@ const { promisfy } = require('promisfy')
 
 const GetProof = require('./getProof')
 const VerifyProof = require('./verifyProof')
-const { toBuffer, decode } = require('./ethUtils')
+const { toBuffer, decode } = require('./utils')
 
 class GetAndVerify{
   constructor(rpcProvider = "http://localhost:8545"){

@@ -3,14 +3,17 @@ const { GetAndVerify, GetProof, VerifyProof } = require('./../index')
 // const { keccak, encode, decode, toBuffer, toHex } = require('./../ethUtils')
 const getAndVerify = new GetAndVerify("https://mainnet.infura.io")
 
+//should need utils to check results
 
 describe('Transaction GetAndVerify Against blockHash', () => {
-
+//take a look at 155 (new tx). compare with pre-dao format
+//should be 9 elements instead of 6 or whatever idk
   it('should be able to request a proof for 0xb53f7522 and verify it', async () => {
     let blockHash = '0xc32470c2459fd607246412e23b4b4d19781c1fa24a603d47a5bc066be3b5c0af'
     let txHash    = '0xacb81623523bbabccb1638a907686bc2f3229c70e3ab51777bef0a635f3ac03f'
     let tx = await getAndVerify.txAgainstBlockHash(txHash, blockHash)
-    // console.log(prf)
+    // console.log(tx)
+    // console.log(tx.hex)
   });
   it('should be able to request a proof for 0xb53f7522 and verify it', async () => {
     let blockHash = '0xf82990de9b368d810ce4b858c45717737245aa965771565f8a41df4c75acc171'

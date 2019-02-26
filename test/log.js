@@ -4,7 +4,7 @@ const { GetAndVerify, GetProof, VerifyProof } = require('./../index')
 
 const getAndVerify = new GetAndVerify("https://mainnet.infura.io")
 
-
+//should need utils
 describe('Log GetAndVerify Against BlockHash', () => {
 
   // it('should be able to request a log proof from web3 and verify it', async () => {

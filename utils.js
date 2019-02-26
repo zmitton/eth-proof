@@ -8,7 +8,13 @@ const decode = Util.rlp.decode
 const toBuffer = (input) => { 
   return input === "0x0" ? Buffer.from([]) : Util.toBuffer(input) 
 }
-const toHex = Util.bufferToHex
+const toHex = (input)=>{
+  if(input instanceof Array){
+    return toHex(encode(input))
+  }else{
+    return Util.bufferToHex(input)
+  }
+}
 const toWord = (input) => {
   return Util.setLengthLeft(toBuffer(input), 32)
 }
