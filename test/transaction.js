@@ -177,3 +177,26 @@ it('should be able to request a proof for ', async () => {
   //   expect(()=>{VerifyProof.transaction(otherPrf.path, prf.value, otherPrf.branch, otherPrf.header, otherPrf.blockHash)}).to.throw()
   // });
 });
+// thanks @Matthalp, arranging blockhashes into a merkle mountain range does indeed seem to be the most _optimal_ way to do this. Quite a bit better than any proposed solution in these EIPs. 
+
+// From the core devs meeting they had decided to push it to the next (~8month) release. Sounds like there should be another EIP proposed using MMRs
+
+// From my initial investigation of MMRs on ethereum. The question is mostly _where_ to put them. The non-interactive proof will be significantly larger if we sit this data in a smart contract. That's because each "query" (non-interactive) would have to also include its `stateproof`(account) and its `storageProof`(less significant). I believe a proof has on the order of 500 queries.
+
+// #### Hard Fork implementation
+
+// Optimal would be to add this data right in the header. This seems like if could break a lot of things though. The `extraData` field would work, but would occupy its complete use (32byte max).  I think it could be less breaky to extend the field to 64 bytes and require the first 32 to always be the MMR root.
+
+// #### Soft fork
+
+// A currently legal place to put this stuff is at the bottom of a smart contract (which can already be done today without any fork see below), but would need the ~500 extra [storage+state proofs](https://gist.github.com/zmitton/c7062cbab6ebf5ce297ed0f221518e75) leading to the MMR root. That's probably about ~2 megabytes extra. 
+
+// Or it could be embedded in a transaction, and specifically the zeroith transaction of every block. Tx proofs are significantly smaller. This is especially true for the zeroith tx because it gets encoded as `<80>` and interestingly sits in the shortest (constant) path by itself in the txTree. This would cause only a total of 10kb above the the header approach.
+
+// The biggest drawback here is that its significantly harder to access from the EVM when compared to a contract that can be accessed directly (as a global in solidity for example). However it can still be used, and much cheaper/easier than earlier "skinny" versions of this proposal.
+
+// #### Velvet fork or simple smart contract: 
+
+// Although this would along maximally be able to prove the work who's blocks included the MMR transaction (so never the full work)). A the same token, the sooner any MMR are getting stuffed, the better. They will only ever be able to prove work that was done after they we implemented. The contract code doesn't even need to be particularly secure, the MMR root just needs to be embedded (in any way) to the block for future software to be able to accept it
+
+

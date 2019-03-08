@@ -2,11 +2,6 @@
 
 This is a generalized merkle-patricia-proof module that now supports ethereum state proofs. That means you can prove _all_ Ethereum data (including that a path is `null`). If you have a single hash that you trust (i.e. blockHash), you can use this module to succinctly prove exactly what data was or was not contained in the Ethereum blockchain at that snapshot in history.
 
-#### Warnings:
-
-- Version 2 is not compatible with version 0, or 1. Major improvements were made to the API.
-- At time of this writing neither Infura nor any RPC provider's support `eth_getProof`, but infura will in the near future. [updates on this](https://github.com/zmitton/eth-proof/issues/9).
-
 ## Use
 
 #### Installation 
@@ -33,11 +28,20 @@ const { GetAndVerify, GetProof, VerifyProof } = require('eth-proof')
 let getAndVerify = new GetAndVerify("http://localhost:8545")
 ```
 
-Note: you must use a modern client that supports RPC. This might mean running your own full-node right now because infura does not support it yet. Also, if you would like to use historic proofs (ones who's blockhash is older than "latest"), you'll have to run your node with the following options:
+
+#### Gotchas
+
+For `Transaction`, `Receipt`, and `Log` proofs: Must hit an Ethereum node that is running `--syncmode full`.
+
+For `Account` and `Storage` proofs: Must hit a node that supports `eth_getProof`. This is any geth or parity node upgraded after ~ January 2019. Unfotunately, at time of this writing, neither Infura, nor any known centralized services support `eth_getProof` (Infura plans to in the near future). [updates on this](https://github.com/zmitton/eth-proof/issues/9). So run your own node.
+
+For _historic_ `Account` and `Storage` proofs  (ones who's blockhash is older than "latest"), you'll have  to run your node with `--gcmode archive`, otherwise the state tree throws away old data and you will get "missing node" errors.
 
 ```
 geth --syncmode full  --gcmode archive
 ```
+
+Specifically: A node without the `full` flag will be missing historic `transactions` and `receipts`. It will return a missing transaction error if you ask for them. A node without the `archive` flag, will still be able to prove _current_ account and storage values, but it will be missing the nodes needed to prove the account and storage values at historical points in time (at particular blocks). 
 
 The instance-functions make asynchronous requests using promises.
 
@@ -103,7 +107,7 @@ However those have been made and can be found [here](https://github.com/ConsenSy
 
 The data formats used/returned are *eth-object*s [documented here](https://github.com/zmitton/eth-object).
 
-They are `account`, `header`, `log`, `proof`, `receipt`, and `transaction`. Eth-objects mimic the native Ethereum format of being _arrays of byteArrays and nested arrays (of the same)_. An account will look something like this:
+They are `account`, `header`, `log`, `proof`, `receipt`, and `transaction`. Eth-objects mimic the native Ethereum format used in RLP. They are _arrays of byteArrays and nested arrays (of the same)_. An account will look something like this:
 
 ```
 [
@@ -114,14 +118,14 @@ They are `account`, `header`, `log`, `proof`, `receipt`, and `transaction`. Eth-
 ]
 ```
 
-But they have helper methods for each expected property:
+But they can be dug into as arrays _or_ using named helper methods for each expected property:
 
 ```javascript
 console.log(account[0]) // => <buffer 01>
 console.log(account.nonce) // => <buffer 01>
 ```
 
-And helpers to build and convert them to all the other useful formats:
+They also have helpers to build/convert/view them in many other useful formats:
 
 ```
 console.log(account.toJson())
@@ -152,28 +156,40 @@ The tx and receipt tests use infura right now (because I dont have a completely 
 
 Its all data currently on Ethereum Mainnet.
 
-These tests hit Infura really hard because every tx or receipt proof requires multiple RPC calls (1 for each tx in the particular block). please be considerate. If you have a full archive node, re-point the rpc calls locally or comment out all but one tests at a time.
+These tests hit Infura really hard because every tx or receipt proof requires multiple RPC calls (1 for each tx in the particular block). please be considerate. If you have a full archive node, re-point the rpc calls locally or use `it.only` to perform only one tests at a time.
 
 Thanks to @simon-jentzsch, for EIP-1186 to make this data available from Geth and Parity clients.
 
-
 ## How it Works
 
-Proving absence: This is a really cool feature of Merkle Patricia Trees. You can prove a key is undefined (whether it is non-existent in the tree or is explicitly set to null). Null-proofs are currently working in version 2!
+Binary merkle proofs are explained pretty well in [this video](https://www.youtube.com/watch?v=5WGgoVmfIik&t=283) by Joseph chow. [Ethereum's Merkle Patricia Tree](https://github.com/ethereum/wiki/wiki/Patricia-Tree) is different, but the concept is the same.
 
-A `proof` can be structured as a sparse `tree`. The ethereum RPC formats proofs as an array of node values. Eth-proof buids a tree by batching all the node values of the proof into the underlying db at `sha3(value)` -> `value`. The verification takes place by simply using this tree that you built, as if it were the real merkle-patricia-tree. You can do any operations on it that you would normally do to the main one. If at any point during traversal of said tree, it tries to “step in” to a hash value that it cant find in the underlying db, this means the proof is missing pieces and is invalid.
+Proving absence: This is a really cool feature of Merkle Patricia Trees. You can prove a key is undefined (whether it is non-existent in the tree or is explicitly set to `null`). Null-proofs are currently working in version 2! I don't know of any tools besides this one that support them.
 
-## Future Tooling.
+An important design decision I made (and implemented in the [merkle-patricia-tree](https://github.com/ethereumjs/merkle-patricia-tree/pull/82/files#diff-f2fabd87f37321748a5499f0df52f235R52) module underlaying this one), was to represent the proof as _itself_ a Patricia Tree (a _sparse_ one), in order to verify it. 
+
+The steps:
+
+- 1 create a new tree from scratch
+- 2 `put`the nodes from proof into the flat key value DB (at `keccak(value)` -> `value`)
+- 3 Set the tree root to the known value
+- 4 perform a standard `get` on this tree
+
+This affords a few interesting optimizations: First, it enabled me to recycle the tree-traversal code already being used, eliminating the hardest part, and avoiding have 2 versions of the same logic. Second it enabled null-proofs to be done with a simple amendment to the tree instead of inventing logic that I don't believe had been authored anywhere yet. Third, it allowed proofs to be combined and therefore compressed/optimized. The nodes could now be communicated in an order, eliminating the need to communicate the same nodes twice between different proofs. 
+
+Lastly, This approach seems to extend much farther than I had originally thought: This sparse tree will actually support `put`, which means that it can be used as a drop-in replacement database for the EVM. An O(log(n)) replacement for the entire state database that is
+
+
+
+## End Game.
 
 To complete the functionality attempted by this tool, a "light-client" tool (that downloads all the hashes and validates the work between them) will have to be built. The output of which might be a "workChain" which can interface with eth-proof to finally begin to leverage some of the really useful security properties of PoW blockchains.
 
-Because proofs are being modeled as mini trees we can even run an EVM implementation directly on this tree as usual. If the EVM tries to traverse any data that doesn't exist (even null data must have proof of null), it should return as an invalid ("Missing node error").
-
-## End Game
+We would like to find the right context to run an EVM implementation directly on a proof tree.
 
 long term goal is are light clients that can validate an entire state transition. It would just need a proof containing all data touched during the state transition (tx). Unfortunately Ethereum removed the `receipt.postTransactioState` root which could have been useful for this :(
 
 We also would like for wallets that only display data that has been verified.
 
-We are also finding it useful to relay ethereum to itself. You can make proofs about any historical information and information not usually available to the EVM can be made available. Layer 2 solutions like Truebit and Plasma could greatly benefit from this functionality.
+We are finding it useful to relay ethereum to itself. You can make proofs about any historical information and information not usually available to the EVM can be made available. Layer 2 solutions like Truebit and Plasma could greatly benefit from this functionality.
 

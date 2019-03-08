@@ -1,11 +1,8 @@
-// const Web3 = require('web3')
 const expect = require("chai").expect;
 
 const { GetAndVerify, GetProof, VerifyProof } = require('./../index')
 const getAndVerify = new GetAndVerify("https://mainnet.infura.io")
-// const getAndVerify = new GetAndVerify("http://localhost:8545")
 const { keccak, encode, decode, toBuffer, toHex } = require('./../utils')
-//should need utils
 
 describe('Receipt GetAndVerify Against BlockHash', () => {
 
@@ -148,18 +145,4 @@ describe('Receipt GetAndVerify Against BlockHash', () => {
     let receipt   = await getAndVerify.receiptAgainstBlockHash(txHash, blockHash)
     // console.log(prf)
   });
-
-  // it('requesting invalid tx hash should throw error', async () => {
-  //   await getAndVerify.getReceiptProof('0x4914025aa9ea9f274b174205adde3243eec74589bef9a0e78a433763b2f8caa3').should.be.rejectedWith(Error)
-  //   await getAndVerify.getReceiptProof('0x1234').should.be.rejectedWith(Error)
-  // });
-
-  // it('verifying a modified or different proof should throw an error', async () => {
-  //   let prf = await getAndVerify.getReceiptProof('0x4e4b9cd37d9b5bb38941983a34d1539e4930572bdaf41d1aa54ddc738630b1bb')
-  //   let otherPrf = await getAndVerify.getReceiptProof('0x74bdf5450025b8806d55cfbb9b393dce630232f5bf87832ae6b675db9d286ac3')
-
-  //   expect(()=>{VerifyProof.receipt(Buffer.from('80','hex'), prf.value, prf.branch, prf.header, prf.blockHash)}).to.throw()
-  //   expect(()=>{VerifyProof.receipt(encode(prf.txIndex), otherPrf.value, prf.branch, prf.header, prf.blockHash)}).to.throw()
-  //   expect(()=>{VerifyProof.receipt(otherPrf.path, prf.value, otherPrf.branch, otherPrf.header, otherPrf.blockHash)}).to.throw()
-  // });
 });
