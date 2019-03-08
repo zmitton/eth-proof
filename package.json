@@ -14,7 +14,7 @@
     "test": "node_modules/.bin/mocha --require should --timeout 25000"
   },
   "author": "zac mitton",
-  "license": "ISC",
+  "license": "Apache License Version 2.0",
   "devDependencies": {
     "chai": "^4.2.0",
     "mocha": "^6.0.1",
