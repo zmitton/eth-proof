@@ -179,9 +179,7 @@ This affords a few interesting optimizations: First, it enabled me to recycle th
 
 Lastly, This approach seems to extend much farther than I had originally thought: This sparse tree will actually support `put`, which means that it can be used as a drop-in replacement database for the EVM. An O(log(n)) replacement for the entire state database that is
 
-
-
-## End Game.
+## End Game
 
 To complete the functionality attempted by this tool, a "light-client" tool (that downloads all the hashes and validates the work between them) will have to be built. The output of which might be a "workChain" which can interface with eth-proof to finally begin to leverage some of the really useful security properties of PoW blockchains.
 
@@ -192,4 +190,3 @@ long term goal is are light clients that can validate an entire state transition
 We also would like for wallets that only display data that has been verified.
 
 We are finding it useful to relay ethereum to itself. You can make proofs about any historical information and information not usually available to the EVM can be made available. Layer 2 solutions like Truebit and Plasma could greatly benefit from this functionality.
-

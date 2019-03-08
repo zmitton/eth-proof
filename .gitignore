@@ -2,3 +2,5 @@ node_modules
 personal
 .DS_Store
 test.js
+build
+/**/build
