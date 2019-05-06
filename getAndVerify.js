@@ -1,11 +1,9 @@
-const { promisfy } = require('promisfy')
-
 const GetProof = require('./getProof')
 const VerifyProof = require('./verifyProof')
-const { toBuffer, decode } = require('./utils')
+const { toBuffer } = require('eth-util-lite')
 
 class GetAndVerify{
-  constructor(rpcProvider = "http://localhost:8545"){
+  constructor(rpcProvider = "https://mainnet.infura.io"){
     this.get = new GetProof(rpcProvider)
   }
 

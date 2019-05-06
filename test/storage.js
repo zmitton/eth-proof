@@ -32,13 +32,11 @@ contract Storage {
     }
 }
 **************************************************************************/
-const { keccak, encode, decode, toBuffer, toHex, toWord, mappingAt } = require('./../utils')
+const { keccak, toBuffer, mappingAt } = require('eth-util-lite')
 
-// const expect = require("chai").expect;
+const { GetAndVerify } = require('./../index')
 
-const { GetAndVerify, GetProof, VerifyProof } = require('./../index')
-
-const getAndVerify = new GetAndVerify("http://localhost:8545")
+const getAndVerify = new GetAndVerify("https://mainnet.infura.io")
 
 describe('Storage GetAndVerify Against BlockHash', () => {
   // add test for the contract itself (account proof) and assert against known values for the code/storageRoot/value
