@@ -1,21 +1,15 @@
-const { encode, toBuffer } = require('./utils')
+const { encode } = require('eth-util-lite')
 const { promisfy } = require('promisfy')
 
 const Tree = require('merkle-patricia-tree')
 
 const Rpc  = require('isomorphic-rpc')
-// const Verify = require('./verifyProof')
 
-const { Account, Header, Log, Proof, Receipt, Transaction } = require('eth-object')
+const { Header, Proof, Receipt, Transaction } = require('eth-object')
 
-// const Transaction = require('./eth-object/transaction')
-// const Account = require('./eth-object/account')
-// const Proof   = require('./eth-object/proof')
-// const Header  = require('./eth-object/header')
-// const Receipt = require('./eth-object/receipt')
 
 module.exports = class GetProof{
-  constructor(rpcProvider = "http://localhost:8545"){
+  constructor(rpcProvider = "https://mainnet.infura.io"){
     this.rpc = new Rpc(rpcProvider)
     this.eth_getProof = this.rpc.eth_getProof
   }

@@ -1,6 +1,5 @@
 // const Web3 = require('web3')
-const expect = require("chai").expect;
-const { GetAndVerify, GetProof, VerifyProof } = require('./../index')
+const { GetAndVerify, VerifyProof } = require('./../index')
 
 const getAndVerify = new GetAndVerify("https://mainnet.infura.io")
 

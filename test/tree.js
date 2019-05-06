@@ -1,9 +1,6 @@
-// const expect = require("chai").expect;
-// const { keccak, encode, toBuffer } = require('./../utils')
-// const { Account, Header, Log, Proof, Receipt, Transaction } = require('eth-object')
-// const { GetAndVerify, GetProof, VerifyProof } = require('./../index')
+// const { GetAndVerify } = require('./../index')
 
-// const getAndVerify = new GetAndVerify("http://localhost:8545")
+// const getAndVerify = new GetAndVerify("https://mainnet.infura.io")
 
 // describe('Account GetAndVerify Against BlockHash', () => {
 

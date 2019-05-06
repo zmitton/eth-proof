@@ -25,7 +25,7 @@ The getter classes (`GetProof` and `GetAndVerify`) request data from an RPC prov
 
 ```javascript
 const { GetAndVerify, GetProof, VerifyProof } = require('eth-proof')
-let getAndVerify = new GetAndVerify("http://localhost:8545")
+let getAndVerify = new GetAndVerify("https://mainnet.infura.io")
 ```
 
 
@@ -152,7 +152,7 @@ Account.fromRaw(arrayOfBuffers)
 
 ## Testing
 
-The tx and receipt tests use infura right now (because I dont have a completely full node). The account and storage tests point to localhost:8545 because infura doenst yet support the rpc call needed to attain them `eth_getProof` (from EIP 1186).
+The tx and receipt tests use infura right now (because I dont have a completely full node).
 
 Its all data currently on Ethereum Mainnet.
 

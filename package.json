@@ -1,11 +1,11 @@
 {
   "name": "eth-proof",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Proving things in the Ethereum Patricia Trie (tree)",
   "main": "index.js",
   "dependencies": {
-    "eth-object": "^1.0.0",
-    "ethereumjs-util": "^6.0.0",
+    "eth-object": "^1.0.3",
+    "eth-util-lite": "^1.0.1",
     "isomorphic-rpc": "^1.1.0",
     "merkle-patricia-tree": "github:zmitton/merkle-patricia-tree#build",
     "promisfy": "^1.2.0"

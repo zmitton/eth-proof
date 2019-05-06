@@ -1,12 +1,8 @@
-const { keccak, encode, decode, toBuffer, toWord } = require('./utils')
+const { keccak, encode, decode, toBuffer, toWord } = require('eth-util-lite')
 
 const Tree = require('merkle-patricia-tree')
 
-const { Account, Header, Log, Proof, Receipt, Transaction } = require('eth-object')
-
-// const Account     = require('./eth-object/account')
-// const Transaction = require('./eth-object/transaction')
-// const Receipt     = require('./eth-object/receipt')
+const { Account, Receipt, Transaction } = require('eth-object')
 
 const ACCOUNTS_ROOT_INDEX = 3 // within header
 const TXS_ROOT_INDEX      = 4 // within header
@@ -17,7 +13,7 @@ const SET_OF_LOGS_INDEX   = 3 // within receipt
 
 class Verify{
 
-  static chainContainsBlockHash(chain, blockHash){ throw new Error("Feature not yet available") }
+  static chainContainsBlockHash(_chain, _blockHash){ throw new Error("Feature not yet available") }
 
   static getRootFromProof(proof){ return keccak(encode(proof[0])) }
 

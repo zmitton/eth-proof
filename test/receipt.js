@@ -1,8 +1,6 @@
-const expect = require("chai").expect;
-
-const { GetAndVerify, GetProof, VerifyProof } = require('./../index')
+const { GetAndVerify } = require('./../index')
 const getAndVerify = new GetAndVerify("https://mainnet.infura.io")
-const { keccak, encode, decode, toBuffer, toHex } = require('./../utils')
+const { encode, toHex } = require('eth-util-lite')
 
 describe('Receipt GetAndVerify Against BlockHash', () => {
 
