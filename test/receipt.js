@@ -1,5 +1,5 @@
 const { GetAndVerify } = require('./../index')
-const getAndVerify = new GetAndVerify("https://mainnet.infura.io")
+const getAndVerify = new GetAndVerify(process.env.ETHPROOFENDPOINT)
 const { encode, toHex } = require('eth-util-lite')
 
 describe('Receipt GetAndVerify Against BlockHash', () => {

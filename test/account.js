@@ -2,28 +2,36 @@ const { keccak, encode, toBuffer } = require('eth-util-lite')
 const { Account } = require('eth-object')
 const { GetAndVerify } = require('./../index')
 
-const getAndVerify = new GetAndVerify("https://mainnet.infura.io")
+const getAndVerify = new GetAndVerify(process.env.ETHPROOFENDPOINT)
+
+before(() => {
+  if(!process.env.ETHPROOFENDPOINT){
+    throw new Error('To run tests, set an ETHPROOFENDPOINT environment variable' + 
+      ' using something like `export ETHPROOFENDPOINT="https://mainnet.infura.io/v3/yourInfuraApiToken`.' + 
+      ' you will need to have a free infura API token (if you are note running your own archive node)' + 
+      ' because the tests will otherwise be rate-limited by Infura.')
+  }
+})
 
 describe('Account GetAndVerify Against BlockHash', () => {
-
-  it.only('should be able to request a proof for 0xb53f7522 and verify it', async () => {
+  it('should be able to request a proof for 0xb53f7522 and verify it', async () => {
     let blockHash = '0xb7964f87a97582605af695710ad252afa018a97384ba9438cf24e42fa9f0efc9'
     let accountAddress = '0x9cc9bf39a84998089050a90087e597c26758685d'
     let account = await getAndVerify.accountAgainstBlockHash(accountAddress, blockHash)
-    console.log("\nONLY ONE TEST IS CURRENTLY ENABLED. PLEASE SELECT ONE TEST AT A TIME\n")
-    console.log("\nPLAIN:\n", account)
-    console.log("\nRAW:\n", account.raw)
-    console.log("\nOBJECT:\n", account.object)
-    console.log("\nHEX:\n", account.hex)
-    console.log("\nBUFFER:\n", account.buffer)
-    console.log("\nJSON:\n", account.json)
-    console.log("\nSERIALIZE():\n", account.serialize())
-    console.log("\nTOBUFFER():\n", account.toBuffer())
-    console.log("\nTOHEX():\n", account.toHex())
-    console.log("\nTOOBJECT():\n", account.toObject())
-    console.log("\nTOSTRING():\n", account.toString())
-    console.log("\nTOJSON():\n", account.toJson())
-    console.log("\nULEs():\n", Account.fields)
+    // console.log("\nONLY ONE TEST IS CURRENTLY ENABLED. PLEASE SELECT ONE TEST AT A TIME\n")
+    console.log("\naccount:\n\n", account)
+    console.log("\naccount.raw:\n\n", account.raw)
+    console.log("\naccount.object:\n\n", account.object)
+    console.log("\naccount.hex:\n\n", account.hex)
+    console.log("\naccount.buffer:\n\n", account.buffer)
+    console.log("\naccount.json:\n\n", account.json)
+    // console.log("\nSERIALIZE():\n", account.serialize())
+    // console.log("\nTOBUFFER():\n", account.toBuffer())
+    // console.log("\nTOHEX():\n", account.toHex())
+    // console.log("\nTOOBJECT():\n", account.toObject())
+    // console.log("\nTOSTRING():\n", account.toString())
+    // console.log("\nTOJSON():\n", account.toJson())
+    // console.log("\nULEs():\n", Account.fields)
   });
   it('should be able to request a proof for 0xb53f7522 and verify it', async () => {
     let blockHash = '0x7315156cc8347cf9bfac8a4cd1db6f5d4727b06b3fe14feba62381335b2d14d5'

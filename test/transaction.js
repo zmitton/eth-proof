@@ -1,7 +1,7 @@
 const expect = require("chai").expect;
 const { GetAndVerify, VerifyProof } = require('./../index')
 // const { encode } = require('eth-util-lite')
-const getAndVerify = new GetAndVerify("https://mainnet.infura.io")
+const getAndVerify = new GetAndVerify(process.env.ETHPROOFENDPOINT)
 
 //should need utils to check results
 

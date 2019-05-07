@@ -36,7 +36,7 @@ const { keccak, toBuffer, mappingAt } = require('eth-util-lite')
 
 const { GetAndVerify } = require('./../index')
 
-const getAndVerify = new GetAndVerify("https://mainnet.infura.io")
+const getAndVerify = new GetAndVerify(process.env.ETHPROOFENDPOINT)
 
 describe('Storage GetAndVerify Against BlockHash', () => {
   // add test for the contract itself (account proof) and assert against known values for the code/storageRoot/value

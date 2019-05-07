@@ -1,7 +1,7 @@
 // const Web3 = require('web3')
 const { GetAndVerify, VerifyProof } = require('./../index')
 
-const getAndVerify = new GetAndVerify("https://mainnet.infura.io")
+const getAndVerify = new GetAndVerify(process.env.ETHPROOFENDPOINT)
 
 //should need utils
 describe('Log GetAndVerify Against BlockHash', () => {
