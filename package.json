@@ -1,13 +1,13 @@
 {
   "name": "eth-proof",
-  "version": "2.1.5",
+  "version": "2.1.6",
   "description": "Proving things in the Ethereum Patricia Trie (tree)",
   "main": "index.js",
   "dependencies": {
     "buffer": "^6.0.3",
     "eth-object": "^1.0.3",
     "eth-util-lite": "^1.0.1",
-    "isomorphic-rpc": "^1.1.1",
+    "isomorphic-rpc": "^1.2.1",
     "merkle-patricia-tree": "github:zmitton/merkle-patricia-tree#build",
     "promisfy": "^1.2.0"
   },
@@ -18,7 +18,7 @@
   "license": "MIT",
   "devDependencies": {
     "chai": "^4.2.0",
-    "mocha": "^6.0.1",
+    "mocha": "^6.2.3",
     "should": "^13.2.3"
   }
 }
