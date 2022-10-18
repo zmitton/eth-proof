@@ -1,3 +1,6 @@
+# deprecated
+I have not maintained this past the London hard fork. It stopped working for many features due to the introduction of account versioning (which broke RLP). please post an issue if you have a working fork to recomend
+
 # Eth Proof `2.0.0`
 
 This is a generalized merkle-patricia-proof module that now supports ethereum state proofs. That means you can prove _all_ Ethereum data (including that a path is `null`). If you have a single hash that you trust (i.e. blockHash), you can use this module to succinctly prove exactly what data was or was not contained in the Ethereum blockchain at that snapshot in history.
